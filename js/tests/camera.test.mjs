@@ -69,6 +69,18 @@ for (const taper of [0, 0.5, 1]) {
 }
 
 {
+  const cam = makeCam({ taper: 1, zoom: 0.45 });
+  assert.ok(Math.abs(cam.V.pitchDeg - 12) < 0.01, `min zoom -> min pitch (${cam.V.pitchDeg})`);
+  const cam2 = makeCam({ taper: 1, zoom: 2.6 });
+  assert.ok(Math.abs(cam2.V.pitchDeg - 46) < 0.01, `max zoom -> max pitch (${cam2.V.pitchDeg})`);
+  const mid = makeCam({ taper: 1, zoom: 1.5 });
+  const a = mid.V.pitchDeg;
+  mid.setZoom(0.45);
+  mid.tick(1);
+  assert.ok(mid.V.pitchDeg < a, "pitch decreases as zoom decreases");
+}
+
+{
   const cam = makeCam({ taper: 1, zoom: 1 });
   cam.world = { minX: 0, minY: 0, maxX: 72, maxY: 72 };
   cam.panBy(-10000, -10000);

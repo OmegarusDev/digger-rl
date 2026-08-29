@@ -14,7 +14,7 @@ function bakeTree(key, w, h, paint) {
 export function drawFlora(ctx, cam, V, P, item, t) {
   const p = cam.project(item.x, item.y);
   if (p.y < -80 || p.y > cam.screenH + 80 || p.x < -80 || p.x > cam.screenW + 80) return;
-  const scale = item.scale * p.s;
+  const scale = item.scale * cam.zoom * p.s;
 
   if (item.state === "stump") {
     drawStump(ctx, P, p.x, p.y, scale);

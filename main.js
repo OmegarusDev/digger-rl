@@ -31,8 +31,6 @@ const cam = new WorldCamera(canvas, {
 const terrain = new SmoothTerrain({
   sample: makeTerrainSampler(sim.state.valley, P, seed),
   step: 0.4,
-  light: P.fx.light,
-  dark: P.fx.dark,
 });
 
 const fx = new FxSystem();

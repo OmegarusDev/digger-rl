@@ -10,6 +10,9 @@ export class WorldCamera {
     this.trap = this.V.trap;
     this.taper = clamp(opts.taper ?? 1, 0, 1);
     this.ppu = opts.ppu ?? 44;
+    this.pitchZoom = opts.pitchZoom !== false;
+    this.pitchMin = opts.pitchMin ?? 12;
+    this.pitchMax = opts.pitchMax ?? 46;
     this.zoomMin = opts.zoomMin ?? 0.45;
     this.zoomMax = opts.zoomMax ?? 2.6;
     this.world = opts.world ?? null;
@@ -25,6 +28,11 @@ export class WorldCamera {
     this._shakeDuration = 0;
     this._anchor = null;
     this._deriv = null;
+    if (this.pitchZoom) {
+      const t0 = clamp((this.zoom - this.zoomMin) / (this.zoomMax - this.zoomMin), 0, 1);
+      this.V.setPitch(lerp(this.pitchMin, this.pitchMax, t0));
+      this.pitchDeg = this.V.pitchDeg;
+    }
     if (opts.viewport) {
       this.screenW = opts.viewport.width;
       this.screenH = opts.viewport.height;
@@ -193,6 +201,12 @@ export class WorldCamera {
     this.x = lerp(this.x, this.targetX, followT);
     this.y = lerp(this.y, this.targetY, followT);
     this.zoom = lerp(this.zoom, this.targetZoom, zoomT);
+    if (this.pitchZoom) {
+      const t = clamp((this.zoom - this.zoomMin) / (this.zoomMax - this.zoomMin), 0, 1);
+      this.V.setPitch(lerp(this.pitchMin, this.pitchMax, t));
+      this.pitchDeg = this.V.pitchDeg;
+      this._deriv = null;
+    }
     this._frame();
     const a = this._anchor;
     if (a && Math.abs(this.targetZoom - this.zoom) > 0.0005) {
