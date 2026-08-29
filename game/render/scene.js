@@ -1,8 +1,10 @@
 import { drawFlora } from "./flora.js";
 import { drawFounder, drawCamp, drawFireGlow } from "./camp.js";
 import { darkness } from "../sim/time.js";
+import { WORK_RANGE } from "../sim/founder.js";
+import { withAlpha } from "../../forge/draw.js";
 
-export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer) {
+export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {}) {
   const state = sim.state;
   cam.begin(ctx);
   terrainRenderer(ctx, cam);
@@ -20,6 +22,20 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer) {
   for (const e of drawList) {
     if (e.founder) drawFounder(ctx, cam, P, state.founder);
     else drawFlora(ctx, cam, cam.V, P, e.item, t);
+  }
+
+  const hov = opts.hoverItem;
+  if (hov && hov.state === "alive") {
+    const inRange = Math.hypot(hov.x - state.founder.x, hov.y - state.founder.y) <= WORK_RANGE;
+    const hp = cam.project(hov.x, hov.y);
+    ctx.strokeStyle = withAlpha(P.ui.accent, inRange ? 0.8 : 0.32);
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.ellipse(hp.x, hp.y, 0.44 * cam.scale * hp.s, 0.44 * cam.scale * hp.s * cam.V.deckRatio, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1;
   }
 
   fx.draw(ctx, (x, y) => cam.project(x, y), cam.scale);

@@ -4,6 +4,9 @@ import { pathTo, nearestWalkable } from "./grid.js";
 import { mulberry32 } from "../../forge/rng.js";
 
 const NAMES = ["Rowan", "Aldwin", "Bram", "Cedric", "Dunstan", "Edric", "Godric", "Wystan"];
+export const WORK_RANGE = 1.45;
+const ACQUIRE_RANGE = 1.9;
+const STASH_RANGE = 1.7;
 
 export function createFounder(state) {
   const c = state.camp;
@@ -16,7 +19,7 @@ export function createFounder(state) {
     x: spot.x + 0.5,
     y: spot.y + 0.5,
     dir: Math.PI / 2,
-    speed: 2.4,
+    speed: 2.6,
     phase: 0,
     moving: false,
     action: null,
@@ -27,10 +30,12 @@ export function createFounder(state) {
     skills: { wood: 0 },
     hp: 100,
     maxHp: 100,
-    task: null,
+    cmd: { dx: 0, dy: 0 },
+    workLatch: false,
+    workTargetId: null,
+    _pathFor: null,
     path: null,
     wp: 0,
-    manualTarget: null,
     blacklist: new Map(),
     idleT: 0,
   };
@@ -40,14 +45,48 @@ export function updateFounder(state, dt) {
   const f = state.founder;
   f.moving = false;
 
-  if (f.manualTarget) {
-    const mt = f.manualTarget;
-    f.manualTarget = null;
-    const p = pathTo(state, f.x, f.y, mt.x, mt.y);
-    if (p) {
-      f.task = { type: "manual" };
-      f.path = p;
-      f.wp = 0;
+  autoDeposit(state, f);
+
+  const cmd = f.cmd || { dx: 0, dy: 0 };
+  if (cmd.dx !== 0 || cmd.dy !== 0) {
+    if (f.workLatch || f.workTargetId != null || f.path || f.task) {
+      f.workLatch = false;
+      f.workTargetId = null;
+      f.path = null;
+      f.task = null;
+      f.action = null;
+    }
+    f.idleT = 0;
+    const len = Math.hypot(cmd.dx, cmd.dy) || 1;
+    const sp = f.speed * dt;
+    tryMove(state, f, (cmd.dx / len) * sp, (cmd.dy / len) * sp);
+    f.dir = Math.atan2(cmd.dy, cmd.dx);
+    f.phase += dt * f.speed * 0.62;
+    f.moving = true;
+    f.action = null;
+    return;
+  }
+
+  if (f.workLatch && f.workTargetId == null) acquireWork(state, f, ACQUIRE_RANGE);
+
+  if (f.workTargetId != null) {
+    const item = state.flora[f.workTargetId];
+    if (!item || item.state !== "alive") {
+      f.workTargetId = null;
+      f._pathFor = null;
+      if (f.workLatch) acquireWork(state, f, ACQUIRE_RANGE);
+      if (f.workTargetId == null) {
+        f.idleT += dt;
+        f.action = null;
+        return;
+      }
+    } else {
+      const d = Math.hypot(item.x - f.x, item.y - f.y);
+      if (d <= WORK_RANGE) {
+        doWork(state, dt, item);
+      } else {
+        walkToward(state, f, item, dt);
+      }
       return;
     }
   }
@@ -59,101 +98,57 @@ export function updateFounder(state, dt) {
     f.action = null;
     if (done) {
       f.path = null;
-      onArrive(state);
+      if (f.task && f.task.type === "chop") {
+        const item = state.flora[f.task.id];
+        if (item && item.state === "alive" && Math.hypot(item.x - f.x, item.y - f.y) <= WORK_RANGE) {
+          f.task = { type: "work", id: item.id };
+          f.action = "chop";
+          f.swing = 0;
+        } else {
+          f.task = null;
+        }
+      } else if (f.task) {
+        f.task = null;
+      }
     }
     return;
   }
+
+  f.idleT += dt;
 
   if (f.task && f.task.type === "work") {
-    doWork(state, dt);
-    return;
-  }
-
-  decide(state, dt);
-}
-
-function onArrive(state) {
-  const f = state.founder;
-  if (!f.task) return;
-  if (f.task.type === "deposit") {
-    if (Math.hypot(f.x - (state.camp.x + 0.5), f.y - (state.camp.y + 0.5)) < 2.2) {
-      const n = f.carry;
-      state.stores.wood += n;
-      state.bus.emit("deposit", { x: f.x, y: f.y, n });
-      f.carry = 0;
-    }
-    f.task = null;
-  } else if (f.task.type === "chop") {
     const item = state.flora[f.task.id];
     if (item && item.state === "alive") {
-      f.task = { type: "work", id: item.id };
-      f.action = "chop";
-      f.swing = 0;
+      doWork(state, dt, item);
     } else {
-      f.task = null;
-    }
-  } else if (f.task.type === "manual") {
-    f.task = null;
-  }
-}
-
-function doWork(state, dt) {
-  const f = state.founder;
-  const item = state.flora[f.task.id];
-  if (!item || item.state !== "alive") {
-    f.task = null;
-    f.action = null;
-    return;
-  }
-  f.action = f.task.action || "chop";
-  f.swing += dt * (f.swingRate + f.skills.wood * 0.8);
-  if (f.swing >= 1) {
-    f.swing = 0;
-    item.hp -= 1;
-    item.shakeT = 0.22;
-    f.skills.wood = Math.min(1, f.skills.wood + 0.004);
-    if (item.hp <= 0) {
-      fellTree(state, item);
-      f.carry = Math.min(f.carryMax, f.carry + 3);
-      state.bus.emit("gather", { x: f.x, y: f.y, good: "wood", n: 3 });
       f.task = null;
       f.action = null;
-      f.blacklist.delete(item.id);
-    } else {
-      state.bus.emit(f.action === "mine" ? "mineHit" : "chop", { x: item.x, y: item.y, id: item.id });
     }
+    return;
   }
-}
-
-function decide(state, dt) {
-  const f = state.founder;
-  f.action = null;
-  f.idleT += dt;
 
   if (f.carry >= f.carryMax) {
     goDeposit(state);
     return;
   }
 
-  const target = findNearestTree(state, f);
-  if (target) {
-    const p = pathTo(state, f.x, f.y, target.px, target.py);
-    if (p) {
-      f.task = { type: "chop", id: target.item.id };
-      f.path = p;
-      f.wp = 0;
+  if (f.idleT > 2.5) {
+    f.idleT = 0;
+    const target = findNearestTree(state, f);
+    if (target) {
+      const p = pathTo(state, f.x, f.y, target.px, target.py);
+      if (p) {
+        f.task = { type: "chop", id: target.item.id };
+        f.path = p;
+        f.wp = 0;
+        return;
+      }
+      f.blacklist.set(target.item.id, state.tick + 240);
+    }
+    if (f.carry > 0) {
+      goDeposit(state);
       return;
     }
-    f.blacklist.set(target.item.id, state.tick + 240);
-  }
-
-  if (f.carry > 0) {
-    goDeposit(state);
-    return;
-  }
-
-  if (f.idleT > 4) {
-    f.idleT = 0;
     const ang = state.rng() * Math.PI * 2;
     const r = 1 + state.rng() * 2.5;
     const c = state.camp;
@@ -164,6 +159,144 @@ function decide(state, dt) {
       f.wp = 0;
     }
   }
+}
+
+function autoDeposit(state, f) {
+  if (f.carry <= 0) return;
+  const c = state.camp;
+  if (Math.hypot(f.x - (c.x + 0.5), f.y - (c.y + 0.5)) < STASH_RANGE) {
+    const n = f.carry;
+    state.stores.wood += n;
+    state.bus.emit("deposit", { x: f.x, y: f.y, n });
+    f.carry = 0;
+  }
+}
+
+function tryMove(state, f, dx, dy) {
+  const n = state.size;
+  const nx = f.x + dx;
+  const ny = f.y + dy;
+  const walk = (cx, cy) => cx >= 0 && cy >= 0 && cx < n && cy < n && state.walk[cy * n + cx] === 1;
+  if (walk(Math.floor(nx), Math.floor(ny))) {
+    f.x = nx;
+    f.y = ny;
+  } else if (walk(Math.floor(nx), Math.floor(f.y))) {
+    f.x = nx;
+  } else if (walk(Math.floor(f.x), Math.floor(ny))) {
+    f.y = ny;
+  }
+}
+
+function walkToward(state, f, item, dt) {
+  if (!f.path) {
+    if (f._pathFor === f.workTargetId) {
+      f.workTargetId = null;
+      f.workLatch = false;
+      return;
+    }
+    f._pathFor = f.workTargetId;
+    const p = pathTo(state, f.x, f.y, item.x, item.y);
+    if (!p) {
+      f.workTargetId = null;
+      f.workLatch = false;
+      return;
+    }
+    f.path = p;
+    f.wp = 0;
+  }
+  const done = steerAlong(f, f.path, f.speed, dt);
+  f.phase += dt * f.speed * 0.62;
+  f.moving = true;
+  f.action = null;
+  if (done) f.path = null;
+}
+
+function doWork(state, dt, item) {
+  const f = state.founder;
+  f.action = item.kind === "rock" ? "mine" : "chop";
+  f.dir = Math.atan2(item.y - f.y, item.x - f.x);
+  f.swing += dt * (f.swingRate + f.skills.wood * 0.8);
+  if (f.swing >= 1) {
+    f.swing = 0;
+    item.hp -= 1;
+    item.shakeT = 0.22;
+    f.skills.wood = Math.min(1, f.skills.wood + 0.004);
+    if (item.hp <= 0) {
+      fellTree(state, item);
+      f.carry = Math.min(f.carryMax, f.carry + 3);
+      state.bus.emit("gather", { x: f.x, y: f.y, good: "wood", n: 3 });
+      f.workTargetId = null;
+      f._pathFor = null;
+      f.action = null;
+      f.blacklist.delete(item.id);
+      if (f.workLatch) acquireWork(state, f, ACQUIRE_RANGE);
+    } else {
+      state.bus.emit(f.action === "mine" ? "mineHit" : "chop", { x: item.x, y: item.y, id: item.id });
+    }
+  }
+}
+
+function acquireWork(state, f, range) {
+  const foe = nearestEnemy(state, f, range);
+  if (foe) {
+    f.workTargetId = null;
+    f.action = "attack";
+    f.dir = Math.atan2(foe.y - f.y, foe.x - f.x);
+    return;
+  }
+  const hit = findNearestAction(state, f, range);
+  if (hit) {
+    f.workTargetId = hit.item.id;
+    f._pathFor = null;
+  } else {
+    f.workLatch = false;
+    f.workTargetId = null;
+  }
+}
+
+function nearestEnemy(state, f, range) {
+  let best = null;
+  for (const e of state.enemies ?? []) {
+    if ((e.hp ?? 1) <= 0) continue;
+    const d = Math.hypot(e.x - f.x, e.y - f.y);
+    if (d <= range && (!best || d < best.d)) best = { foe: e, d };
+  }
+  return best ? best.foe : null;
+}
+
+function findNearestAction(state, f, range) {
+  const cx = Math.floor(f.x);
+  const cy = Math.floor(f.y);
+  const r = Math.ceil(range) + 1;
+  let best = null;
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      const items = floraAtCell(state, cx + dx, cy + dy);
+      for (const item of items) {
+        if (item.state !== "alive" || (item.kind !== "tree" && item.kind !== "rock")) continue;
+        const d = Math.hypot(item.x - f.x, item.y - f.y);
+        if (d <= range && (!best || d < best.d)) best = { item, d };
+      }
+    }
+  }
+  return best;
+}
+
+export function findFloraNear(state, wx, wy, tol) {
+  const cx = Math.floor(wx);
+  const cy = Math.floor(wy);
+  let best = null;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const items = floraAtCell(state, cx + dx, cy + dy);
+      for (const item of items) {
+        if (item.state !== "alive") continue;
+        const d = Math.hypot(item.x - wx, item.y - wy);
+        if (d <= tol && (!best || d < best.d)) best = item;
+      }
+    }
+  }
+  return best;
 }
 
 function goDeposit(state) {

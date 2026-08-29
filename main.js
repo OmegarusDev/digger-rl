@@ -5,6 +5,7 @@ import { Input } from "./forge/input.js";
 import { GameLoop } from "./forge/loop.js";
 import { makePalette } from "./forge/palette.js";
 import { createSim } from "./game/sim/sim.js";
+import { findFloraNear } from "./game/sim/founder.js";
 import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
 import { createHud } from "./game/ui/hud.js";
@@ -52,8 +53,10 @@ const input = new Input(canvas);
 const hud = createHud(document.getElementById("ui"));
 createSplash(document.getElementById("ui"), {
   seed,
-  onBegin: () => hud.toast(`Valley seed ${seed} — click to send the founder, F toggles follow`),
+  onBegin: () => hud.toast(`Valley seed ${seed} — WASD moves the founder, SPACE works the nearest tree`),
 });
+
+window.__game = { sim, cam };
 
 let follow = true;
 let t = 0;
@@ -68,9 +71,10 @@ function frame(dt) {
   t += dt;
   const ctx = canvas.getContext("2d");
   const io = input.consumeOneShots();
+  const f = sim.state.founder;
 
   for (const k of io.keys) {
-    if (k === "Space") {
+    if (k === "KeyP") {
       loop.paused = !loop.paused;
       hud.setPaused(loop.paused);
     } else if (k === "Digit1") loop.speed = 1;
@@ -79,6 +83,13 @@ function frame(dt) {
     else if (k === "KeyF") {
       follow = !follow;
       hud.toast(follow ? "Following the founder" : "Free camera");
+    } else if (k === "Space") {
+      if (f.workLatch) {
+        f.workLatch = false;
+        f.workTargetId = null;
+      } else {
+        f.workLatch = true;
+      }
     }
   }
 
@@ -89,27 +100,35 @@ function frame(dt) {
     cam.panBy(io.drag.dx, io.drag.dy);
     if (follow && Math.abs(io.drag.dx) + Math.abs(io.drag.dy) > 3) follow = false;
   }
-  const pan = 560 * dt;
-  let pdx = 0;
-  let pdy = 0;
-  if (input.isDown("KeyA") || input.isDown("ArrowLeft")) pdx -= 1;
-  if (input.isDown("KeyD") || input.isDown("ArrowRight")) pdx += 1;
-  if (input.isDown("KeyW") || input.isDown("ArrowUp")) pdy -= 1;
-  if (input.isDown("KeyS") || input.isDown("ArrowDown")) pdy += 1;
-  if (pdx || pdy) {
-    cam.panBy(-pdx * pan, -pdy * pan);
-    follow = false;
-  }
+
+  let mdx = 0;
+  let mdy = 0;
+  if (input.isDown("KeyA") || input.isDown("ArrowLeft")) mdx -= 1;
+  if (input.isDown("KeyD") || input.isDown("ArrowRight")) mdx += 1;
+  if (input.isDown("KeyW") || input.isDown("ArrowUp")) mdy -= 1;
+  if (input.isDown("KeyS") || input.isDown("ArrowDown")) mdy += 1;
+  f.cmd = { dx: mdx, dy: mdy };
+
   if (io.click && io.click.button === 0) {
     const w = cam.screenToWorld(io.click.x, io.click.y);
-    sim.state.founder.manualTarget = { x: w.x, y: w.y };
+    const hit = findFloraNear(sim.state, w.x, w.y, 0.9);
+    if (hit && (hit.kind === "tree" || hit.kind === "rock")) {
+      f.workLatch = false;
+      f.workTargetId = hit.id;
+    }
   }
 
-  if (follow) cam.follow(sim.state.founder.x, sim.state.founder.y);
+  let hoverItem = null;
+  if (input.mouseInside) {
+    const hw = cam.screenToWorld(input.mouseX, input.mouseY);
+    hoverItem = findFloraNear(sim.state, hw.x, hw.y, 0.8);
+  }
+
+  if (follow) cam.follow(f.x, f.y);
   cam.tick(dt);
 
   cam.clear(ctx, "#0f130a");
-  renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m));
+  renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem });
   hud.update(sim.state);
 }
 

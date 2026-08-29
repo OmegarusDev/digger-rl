@@ -45,12 +45,59 @@ function run(sim, seconds) {
   const sim = createSim(777);
   const state = sim.state;
   const f = state.founder;
-  run(sim, 2);
-  const target = { x: f.x + 4, y: f.y + 3 };
-  f.manualTarget = target;
-  run(sim, 4);
-  const d = Math.hypot(f.x - target.x, f.y - target.y);
-  assert.ok(d < 1.6, `founder walks to manual target (d=${d.toFixed(2)})`);
+  run(sim, 1);
+  const c = state.camp;
+  const dx = c.x + 0.5 - f.x;
+  const dy = c.y + 0.5 - f.y;
+  const len = Math.hypot(dx, dy) || 1;
+  f.cmd = { dx: dx / len, dy: dy / len };
+  const d0 = Math.hypot(f.x - (c.x + 0.5), f.y - (c.y + 0.5));
+  run(sim, 0.75);
+  const d1 = Math.hypot(f.x - (c.x + 0.5), f.y - (c.y + 0.5));
+  assert.ok(d1 <= Math.max(0.35, d0 - 0.5), `WASD moves founder toward intent (d0=${d0.toFixed(2)} d1=${d1.toFixed(2)})`);
+  f.cmd = { dx: 0, dy: 0 };
+}
+
+{
+  const sim = createSim(777);
+  const state = sim.state;
+  const f = state.founder;
+  run(sim, 1);
+  const tree = state.flora.find(
+    (it) => it.kind === "tree" && it.state === "alive" && Math.hypot(it.x - f.x, it.y - f.y) < 16
+  );
+  assert.ok(tree, "test tree exists near spawn");
+  f.workTargetId = tree.id;
+  run(sim, 25);
+  assert.ok(tree.state !== "alive", "clicked tree was felled");
+  assert.ok(f.carry > 0 || state.stores.wood > 0, "wood gathered from clicked tree");
+}
+
+{
+  const sim = createSim(777);
+  const state = sim.state;
+  const f = state.founder;
+  run(sim, 1);
+  const goal = state.flora.find(
+    (it) => it.kind === "tree" && it.state === "alive" && Math.hypot(it.x - f.x, it.y - f.y) < 16
+  );
+  assert.ok(goal, "latch test tree exists");
+  for (let i = 0; i < 200; i++) {
+    const d = Math.hypot(goal.x - f.x, goal.y - f.y);
+    if (d < 1.6) break;
+    f.cmd = { dx: (goal.x - f.x) / d, dy: (goal.y - f.y) / d };
+    run(sim, 0.25);
+  }
+  f.cmd = { dx: 0, dy: 0 };
+  const tree = state.flora
+    .filter((it) => it.kind === "tree" && it.state === "alive")
+    .sort((a, b) => Math.hypot(a.x - f.x, a.y - f.y) - Math.hypot(b.x - f.x, b.y - f.y))[0];
+  assert.ok(tree && Math.hypot(tree.x - f.x, tree.y - f.y) <= 1.9, "an alive tree is within acquire range");
+  f.workLatch = true;
+  run(sim, 15);
+  assert.ok(tree.state !== "alive", "space latch felled nearest tree");
+  assert.ok(f.carry > 0 || state.stores.wood > 0, "space latch gathered wood");
+  f.workLatch = false;
 }
 
 {

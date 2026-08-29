@@ -12,9 +12,9 @@ export function createHud(root) {
       <span class="sep"></span>
       <span class="store">souls <span class="n" id="hudPop">1</span></span>
     </div>
-    <div class="hud-paused" id="hudPaused">PAUSED — SPACE</div>
+    <div class="hud-paused" id="hudPaused">PAUSED — P</div>
     <div class="hud-toast" id="hudToast"></div>
-    <div class="hud-hint">drag or WASD pan · wheel zoom · click sends the founder · <b>space</b> pause · <b>1/2/3</b> speed · <b>F</b> follow</div>
+    <div class="hud-hint"><b>WASD</b> move · <b>SPACE</b> work nearest · <b>click</b> a tree to chop · wheel zoom · drag free-cam · <b>P</b> pause · <b>1/2/3</b> speed</div>
   `;
 
   const el = (id) => root.querySelector("#" + id);
