@@ -3,7 +3,7 @@ export function drawAgent(ctx, p, a, skin, V, unit) {
   const u = unit * s;
   const x = p.x;
   const groundY = p.y;
-  const H = 0.52 * u;
+  const H = 0.6 * u;
   const bob = a.moving ? Math.sin(a.phase * Math.PI * 2) * 0.035 * u : 0;
   const face = Math.cos(a.dir) < 0 ? -1 : 1;
   const legSwing = a.moving ? Math.sin(a.phase * Math.PI * 2) * 0.09 * u : 0;

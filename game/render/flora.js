@@ -33,6 +33,7 @@ export function drawFlora(ctx, cam, V, P, item, t) {
   }
 
   if (item.kind === "tree") {
+    drawTreeShadow(ctx, item, p, scale);
     drawTree(ctx, P, item, scale);
   } else if (item.kind === "rock") {
     drawRock(ctx, P, item, scale);
@@ -42,6 +43,14 @@ export function drawFlora(ctx, cam, V, P, item, t) {
   ctx.restore();
 }
 
+function drawTreeShadow(ctx, item, p, scale) {
+  const lean = item.species === "pine" ? 0 : 0.1;
+  ctx.fillStyle = "rgba(14,16,8,0.22)";
+  ctx.beginPath();
+  ctx.ellipse(p.x + lean * scale, p.y + 0.06 * scale, 0.42 * scale, 0.19 * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 function drawTree(ctx, P, item, scale) {
   const key = `tree:${item.species}:${item.variant}`;
   const w = BASE * 1.5;
@@ -49,43 +58,60 @@ function drawTree(ctx, P, item, scale) {
   const spr = bakeTree(key, w, h, (g, gw, gh) => {
     const cx = gw / 2;
     const base = gh - 2;
-    const trunkH = gh * 0.3;
+    const trunkH = gh * 0.34;
     g.fillStyle = P.flora.trunkDark;
-    g.fillRect(cx - 3, base - trunkH, 6, trunkH);
+    g.fillRect(cx - 2.6, base - trunkH, 5.2, trunkH);
     g.fillStyle = P.flora.trunk;
-    g.fillRect(cx - 3, base - trunkH, 3.4, trunkH);
+    g.fillRect(cx - 2.6, base - trunkH, 2.6, trunkH);
+    g.fillStyle = "rgba(0,0,0,0.18)";
+    g.fillRect(cx + 0.8, base - trunkH, 1.8, trunkH);
     if (item.species === "pine") {
       const tint = item.variant === 0 ? P.flora.pineDark : item.variant === 1 ? P.flora.pineLight : "#456238";
       for (let i = 0; i < 3; i++) {
-        const layerY = base - trunkH - i * gh * 0.21;
-        const layerW = gw * (0.4 - i * 0.1);
-        const layerH = gh * 0.32;
-        g.fillStyle = i === 2 ? shadeHex(tint, 14) : tint;
+        const layerY = base - trunkH + 2 - i * gh * 0.2;
+        const layerW = gw * (0.42 - i * 0.11);
+        const layerH = gh * 0.3;
+        g.fillStyle = i === 2 ? shadeHex(tint, 12) : shadeHex(tint, i === 0 ? -8 : 0);
         g.beginPath();
         g.moveTo(cx, layerY - layerH);
         g.lineTo(cx + layerW / 2, layerY);
         g.lineTo(cx - layerW / 2, layerY);
         g.closePath();
         g.fill();
+        g.fillStyle = "rgba(255,252,230,0.1)";
+        g.beginPath();
+        g.moveTo(cx, layerY - layerH);
+        g.lineTo(cx + layerW * 0.18, layerY);
+        g.lineTo(cx - layerW * 0.05, layerY);
+        g.closePath();
+        g.fill();
       }
     } else {
       const tint = item.variant === 0 ? P.flora.oak : item.variant === 1 ? P.flora.oakLight : "#54713c";
-      const canopyY = base - trunkH - gh * 0.12;
+      const canopyY = base - trunkH - gh * 0.1;
+      g.fillStyle = shadeHex(tint, -18);
+      g.beginPath();
+      g.arc(cx + gw * 0.08, canopyY + gh * 0.05, gw * 0.3, 0, Math.PI * 2);
+      g.arc(cx - gw * 0.16, canopyY + gh * 0.02, gw * 0.24, 0, Math.PI * 2);
+      g.fill();
       const blobs = [
-        [0, 0, 0.34],
-        [-0.24, 0.08, 0.24],
-        [0.24, 0.06, 0.25],
-        [0.02, -0.22, 0.26],
+        [-0.16, -0.04, 0.24, -4],
+        [0.2, -0.06, 0.22, 0],
+        [0.0, -0.2, 0.26, 6],
+        [-0.04, -0.02, 0.22, 2],
       ];
-      for (const [ox, oy, r] of blobs) {
-        g.fillStyle = shadeHex(tint, ox < 0 ? -10 : 6);
+      for (const [ox, oy, r, sh] of blobs) {
+        g.fillStyle = shadeHex(tint, sh);
         g.beginPath();
         g.arc(cx + ox * gw, canopyY + oy * gh, r * gw, 0, Math.PI * 2);
         g.fill();
       }
-      g.fillStyle = shadeHex(tint, 24);
+      g.fillStyle = shadeHex(tint, 26);
       g.beginPath();
-      g.arc(cx - gw * 0.1, canopyY - gh * 0.18, gw * 0.16, 0, Math.PI * 2);
+      g.arc(cx - gw * 0.09, canopyY - gh * 0.2, gw * 0.14, 0, Math.PI * 2);
+      g.fill();
+      g.beginPath();
+      g.arc(cx + gw * 0.14, canopyY - gh * 0.12, gw * 0.09, 0, Math.PI * 2);
       g.fill();
     }
   });

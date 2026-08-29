@@ -23,25 +23,25 @@ export function makeTerrainSampler(valley, P, seed) {
     } else {
       const m = clamp((s.moisture + 0.5) / 1.0, 0, 1);
       if (s.type === "forest") {
-        r = lerp(T.forestFloor[0], T.grass[0], 0.18);
-        g = lerp(T.forestFloor[1], T.grass[1], 0.18);
-        b = lerp(T.forestFloor[2], T.grass[2], 0.18);
+        r = lerp(T.forestFloor[0], T.grass[0], 0.1);
+        g = lerp(T.forestFloor[1], T.grass[1], 0.1);
+        b = lerp(T.forestFloor[2], T.grass[2], 0.1);
       } else if (s.type === "meadow") {
-        r = lerp(T.meadow[0], T.grass[0], 1 - m);
-        g = lerp(T.meadow[1], T.grass[1], 1 - m);
-        b = lerp(T.meadow[2], T.grass[2], 1 - m);
+        r = lerp(T.meadow[0], T.shore[0], (1 - m) * 0.25);
+        g = lerp(T.meadow[1], T.shore[1], (1 - m) * 0.25);
+        b = lerp(T.meadow[2], T.shore[2], (1 - m) * 0.25);
       } else {
-        r = lerp(T.grass[0], T.meadow[0], 0.25);
-        g = lerp(T.grass[1], T.meadow[1], 0.25);
-        b = lerp(T.grass[2], T.meadow[2], 0.25);
+        r = lerp(T.grass[0], T.forestFloor[0], 0.35);
+        g = lerp(T.grass[1], T.forestFloor[1], 0.35);
+        b = lerp(T.grass[2], T.forestFloor[2], 0.35);
       }
-      const fert = s.fertility * 0.4;
+      const fert = s.fertility * 0.5;
       r = lerp(r, T.fertile[0], fert);
       g = lerp(g, T.fertile[1], fert);
       b = lerp(b, T.fertile[2], fert);
     }
 
-    const shade = s.elevation * 16;
+    const shade = s.elevation * 18;
     r += shade;
     g += shade;
     b += shade;
@@ -54,10 +54,10 @@ export function makeTerrainSampler(valley, P, seed) {
       b = lerp(b, T.camp[2], k);
     }
 
-    const grain = fbm(detail, wx * 0.4, wy * 0.4, 2) * 9;
+    const grain = fbm(detail, wx * 1.15, wy * 1.15, 2) * 11;
     r += grain;
     g += grain;
-    b += grain * 0.9;
+    b += grain * 0.85;
 
     return {
       r: Math.max(0, Math.min(255, Math.round(r))),

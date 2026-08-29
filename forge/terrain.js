@@ -74,7 +74,7 @@ function blotPainters(light, dark, count, rMin, rMax, aMin, aMax, size) {
 export class SmoothTerrain {
   constructor(opts = {}) {
     this.sample = opts.sample ?? (() => ({ r: 90, g: 100, b: 60 }));
-    this.step = opts.step ?? 48;
+    this.step = opts.step ?? 0.5;
     this.light = opts.light ?? "255,244,214";
     this.dark = opts.dark ?? "26,32,14";
     this._patterns = null;
@@ -118,9 +118,8 @@ export class SmoothTerrain {
     const step = this.step;
     const f = d.f;
     const tapered = f < 0.999;
-    const zoom = cam.zoom;
 
-    const halfSpanX = cam.screenW / (2 * zoom) + step * 1.5;
+    const halfSpanX = cam.screenW / (2 * cam.scale * Math.min(1, f)) + step * 2;
     const ax = Math.floor((cam.x - halfSpanX) / step) * step;
     const cols = Math.ceil((2 * halfSpanX) / step) + 2;
     const nRows = Math.ceil(d.K / step) + 3;
@@ -169,8 +168,8 @@ export class SmoothTerrain {
         const yBot = cam.screenH * (f * v1 + (1 - f) * v1 * v1 * 0.5) * d.invI1;
         if (yBot < -8 || yTop > cam.screenH + 8) continue;
         const cxWorld = this._ax + (this._cols * step) / 2;
-        const xMid = cam.screenW / 2 + (cxWorld - cam.x) * zoom * sMid;
-        const w = this._cols * step * zoom * sMid;
+        const xMid = cam.screenW / 2 + (cxWorld - cam.x) * cam.scale * sMid;
+        const w = this._cols * step * cam.scale * sMid;
         ctx.drawImage(this._grid, 0, j, this._cols, 1, xMid - w / 2, yTop, w, yBot - yTop + 1);
       }
     }

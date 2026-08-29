@@ -8,6 +8,7 @@ import { createSim } from "./game/sim/sim.js";
 import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
 import { createHud } from "./game/ui/hud.js";
+import { createSplash } from "./game/ui/splash.js";
 
 const params = new URLSearchParams(location.search);
 const seedParam = Number(params.get("seed"));
@@ -20,7 +21,7 @@ const cam = new WorldCamera(canvas, {
   pitchDeg: 26,
   taper: 1,
   ppu: 44,
-  zoom: 1.2,
+  zoom: 1.3,
   x: sim.state.camp.x + 0.5,
   y: sim.state.camp.y + 0.5,
   world: { minX: 0, minY: 0, maxX: sim.state.size, maxY: sim.state.size },
@@ -28,7 +29,7 @@ const cam = new WorldCamera(canvas, {
 
 const terrain = new SmoothTerrain({
   sample: makeTerrainSampler(sim.state.valley, P, seed),
-  step: 44,
+  step: 0.5,
   light: P.fx.light,
   dark: P.fx.dark,
 });
@@ -49,7 +50,10 @@ sim.state.bus.on("deposit", (e) => {
 
 const input = new Input(canvas);
 const hud = createHud(document.getElementById("ui"));
-hud.toast(`Valley seed ${seed} — press F to toggle follow, click to send the founder`);
+createSplash(document.getElementById("ui"), {
+  seed,
+  onBegin: () => hud.toast(`Valley seed ${seed} — click to send the founder, F toggles follow`),
+});
 
 let follow = true;
 let t = 0;
@@ -104,7 +108,7 @@ function frame(dt) {
   if (follow) cam.follow(sim.state.founder.x, sim.state.founder.y);
   cam.tick(dt);
 
-  cam.clear(ctx);
+  cam.clear(ctx, "#0f130a");
   renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m));
   hud.update(sim.state);
 }

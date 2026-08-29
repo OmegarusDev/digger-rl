@@ -136,6 +136,7 @@ export class WorldCamera {
   follow(x, y) {
     this.targetX = x;
     this.targetY = y;
+    this._clampTargets();
   }
 
   followAhead(x, y, vx, vy, panFactor = 0.3) {
@@ -182,6 +183,8 @@ export class WorldCamera {
     const m = 4;
     this.targetX = clamp(this.targetX, this.world.minX + m, this.world.maxX - m);
     this.targetY = clamp(this.targetY, this.world.minY + m, this.world.maxY - m);
+    this.x = clamp(this.x, this.world.minX + m, this.world.maxX - m);
+    this.y = clamp(this.y, this.world.minY + m, this.world.maxY - m);
   }
 
   tick(dt) {

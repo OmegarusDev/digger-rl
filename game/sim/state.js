@@ -35,7 +35,7 @@ export function createState(seed) {
     walk: null,
     stores: { wood: 0, food: 0 },
     camp: valley.camp,
-    time: { t: 0, day: 1, season: 0, tod: 0.3 },
+    time: { t: 0.3 * 150, day: 1, season: 0, tod: 0.3 },
     tick: 0,
     founder: null,
     villagers: [],

@@ -106,3 +106,109 @@ html, body {
   text-align: center;
 }
 .hud-toast.on { opacity: 1; }
+
+.title-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 42%, rgba(12, 14, 9, 0.45), rgba(8, 9, 5, 0.78));
+  transition: opacity 0.4s ease;
+}
+.title-wrap.title-out { opacity: 0; pointer-events: none; }
+
+.title-card {
+  text-align: center;
+  padding: 42px 58px 34px;
+  background: linear-gradient(160deg, rgba(48, 40, 26, 0.96), rgba(34, 28, 18, 0.96));
+  border: 1px solid rgba(216, 180, 110, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(0, 0, 0, 0.3);
+  max-width: min(92vw, 480px);
+}
+
+.title-brand {
+  font-size: 13px;
+  letter-spacing: 0.52em;
+  text-indent: 0.52em;
+  color: var(--accent);
+  opacity: 0.9;
+  margin-bottom: 10px;
+}
+
+.title-name {
+  margin: 0;
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+  color: var(--ink);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 0 26px rgba(216, 162, 74, 0.18);
+}
+
+.title-sub {
+  margin-top: 6px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink-dim);
+}
+
+.title-rule {
+  height: 1px;
+  margin: 22px auto 20px;
+  width: 70%;
+  background: linear-gradient(90deg, transparent, rgba(216, 180, 110, 0.45), transparent);
+}
+
+.title-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.title-label {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+.title-form input {
+  width: 110px;
+  padding: 6px 8px;
+  background: rgba(12, 10, 6, 0.8);
+  border: 1px solid rgba(216, 180, 110, 0.35);
+  border-radius: 4px;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}
+.title-form input:focus { border-color: var(--accent); }
+.title-btn {
+  padding: 7px 16px;
+  background: linear-gradient(180deg, rgba(216, 162, 74, 0.24), rgba(216, 162, 74, 0.12));
+  border: 1px solid rgba(216, 162, 74, 0.55);
+  border-radius: 4px;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.title-btn:hover { background: rgba(216, 162, 74, 0.3); }
+.title-btn:active { transform: translateY(1px); }
+
+.title-quote {
+  margin-top: 24px;
+  font-style: italic;
+  font-size: 13.5px;
+  color: var(--ink-dim);
+}
+.title-credit {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
