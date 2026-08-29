@@ -75,4 +75,26 @@ for (const taper of [0, 0.5, 1]) {
   assert.ok(cam.targetX >= 0 && cam.targetY >= 0, "pan clamps to world bounds");
 }
 
+{
+  const cam = makeCam({ taper: 1, zoom: 1 });
+  cam.world = { minX: 0, minY: 0, maxX: 72, maxY: 72 };
+  cam.setZoom(1.6);
+  cam.zoomAt(400, 300, 2.2);
+  for (let i = 0; i < 180; i++) cam.tick(1 / 60);
+  assert.ok(cam.x >= 0 && cam.x <= 72 && cam.y >= 0 && cam.y <= 72, `zoom anchor stays in world (${cam.x.toFixed(1)}, ${cam.y.toFixed(1)})`);
+  assert.ok(Number.isFinite(cam.x) && Number.isFinite(cam.y), "zoom anchor finite");
+  const p = cam.project(cam._anchor ? cam._anchor.wx : cam.unproject(400, 300).x, cam.unproject(400, 300).y);
+  assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y), "projection stays finite after zoom");
+}
+
+{
+  const cam = makeCam({ taper: 1, zoom: 1 });
+  cam.world = { minX: 0, minY: 0, maxX: 72, maxY: 72 };
+  for (let i = 0; i < 40; i++) {
+    cam.zoomAt(720 + (i % 7) * 30, 450 - (i % 5) * 20, 1 + Math.exp(-i * 0.1));
+    cam.tick(1 / 60);
+  }
+  assert.ok(cam.x >= 0 && cam.x <= 72 && cam.y >= 0 && cam.y <= 72, "rapid wheel spam stays clamped");
+}
+
 console.log("camera.test OK");

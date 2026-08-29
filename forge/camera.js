@@ -200,10 +200,12 @@ export class WorldCamera {
       const dx = a.sx - p.x;
       const dy = a.sy - p.y;
       if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
-        this.x += dx / this.zoom;
-        this.y += dy / this.zoom;
-        this.targetX += dx / this.zoom;
-        this.targetY += dy / this.zoom;
+        const k = 1 / (this.scale * Math.max(0.2, p.s));
+        this.x += dx * k;
+        this.y += dy * k;
+        this.targetX += dx * k;
+        this.targetY += dy * k;
+        this._clampTargets();
       } else this._anchor = null;
     } else this._anchor = null;
     if (this._shakeDuration > 0) {

@@ -94,7 +94,9 @@ function frame(dt) {
   }
 
   if (io.zoom.delta) {
-    cam.zoomAt(io.zoom.x, io.zoom.y, cam.targetZoom * Math.exp(-io.zoom.delta * 0.0014));
+    const z = cam.targetZoom * Math.exp(-io.zoom.delta * 0.0014);
+    if (follow) cam.setZoom(z);
+    else cam.zoomAt(io.zoom.x, io.zoom.y, z);
   }
   if (io.drag.moved) {
     cam.panBy(io.drag.dx, io.drag.dy);
