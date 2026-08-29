@@ -1,0 +1,108 @@
+:root {
+  --ink: #e9dfc6;
+  --ink-dim: #b3a888;
+  --ink-faint: #7d745c;
+  --plate: rgba(24, 20, 13, 0.82);
+  --plate-edge: rgba(210, 180, 120, 0.22);
+  --accent: #d8a24a;
+  --bad: #c45a4a;
+  --good: #7ba05c;
+  --font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0c0e09;
+  font-family: var(--font);
+  color: var(--ink);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#game {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+  cursor: grab;
+}
+#game.dragging { cursor: grabbing; }
+
+#ui { position: fixed; inset: 0; pointer-events: none; }
+#ui .clickable { pointer-events: auto; }
+
+.hud-top {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 16px;
+  background: var(--plate);
+  border: 1px solid var(--plate-edge);
+  border-radius: 6px;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.hud-top .sep { width: 1px; height: 16px; background: var(--plate-edge); }
+.hud-top .clock { color: var(--ink-dim); min-width: 46px; text-align: center; }
+.hud-top .date { min-width: 128px; }
+.hud-top .store { display: inline-flex; align-items: center; gap: 6px; }
+.hud-top .store .n { color: var(--accent); font-variant-numeric: tabular-nums; }
+.hud-top canvas { display: block; }
+
+.hud-paused {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 6px 12px;
+  background: var(--plate);
+  border: 1px solid var(--plate-edge);
+  border-radius: 6px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  display: none;
+}
+.hud-paused.on { display: block; }
+
+.hud-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 14px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  background: rgba(12, 11, 8, 0.55);
+  border-radius: 6px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.hud-hint b { color: var(--ink-dim); font-weight: 600; }
+
+.hud-toast {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 16px;
+  background: var(--plate);
+  border: 1px solid var(--plate-edge);
+  border-radius: 6px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  max-width: 70vw;
+  text-align: center;
+}
+.hud-toast.on { opacity: 1; }

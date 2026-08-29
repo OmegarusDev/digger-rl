@@ -1,0 +1,10 @@
+{
+  "name": "digger-rl",
+  "private": true,
+  "type": "module",
+  "description": "Digger RL — a medieval village roguelite. Zero runtime dependencies; all art, audio and UI drawn/synthesized in code.",
+  "scripts": {
+    "test": "node verify.mjs",
+    "serve": "python3 -m http.server 8080"
+  }
+}
