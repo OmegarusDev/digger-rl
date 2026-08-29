@@ -21,13 +21,13 @@ function buildPattern(ctx, seed, size, painters) {
 
 function grainPainters(light, dark) {
   return (g, rng, S, wrap) => {
-    for (let i = 0; i < 1400; i++) {
+    for (let i = 0; i < 900; i++) {
       const x = rng() * S;
       const y = rng() * S;
       const isLight = rng() > 0.5;
       const style = isLight
-        ? `rgba(${light},${(0.04 + rng() * 0.06).toFixed(3)})`
-        : `rgba(${dark},${(0.05 + rng() * 0.07).toFixed(3)})`;
+        ? `rgba(${light},${(0.02 + rng() * 0.035).toFixed(3)})`
+        : `rgba(${dark},${(0.028 + rng() * 0.042).toFixed(3)})`;
       const w = 1 + (rng() > 0.9 ? 1 : 0);
       wrap(g, S, () => {
         g.fillStyle = style;
@@ -35,13 +35,13 @@ function grainPainters(light, dark) {
       });
     }
     g.lineWidth = 1;
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 10; i++) {
       const x = rng() * S;
       const y = rng() * S;
       const l = 6 + rng() * 16;
       const a = 0.55 + (rng() - 0.5) * 0.2;
       wrap(g, S, () => {
-        g.strokeStyle = `rgba(${dark},0.05)`;
+        g.strokeStyle = `rgba(${dark},0.04)`;
         g.beginPath();
         g.moveTo(x, y);
         g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l);
@@ -175,10 +175,19 @@ export class SmoothTerrain {
     }
 
     ctx.fillStyle = this._patterns.macro;
-    ctx.fillRect(0, 0, cam.screenW, cam.screenH);
+    this._fillAnchored(ctx, cam, 1536);
     ctx.fillStyle = this._patterns.mottle;
-    ctx.fillRect(0, 0, cam.screenW, cam.screenH);
+    this._fillAnchored(ctx, cam, 512);
     ctx.fillStyle = this._patterns.grain;
-    ctx.fillRect(0, 0, cam.screenW, cam.screenH);
+    this._fillAnchored(ctx, cam, 192);
+  }
+
+  _fillAnchored(ctx, cam, size) {
+    const ox = -((((cam.x * cam.scale * 0.92) % size) + size) % size);
+    const oy = -((((cam.y * cam.scale * 0.92) % size) + size) % size);
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.fillRect(-ox - size, -oy - size, cam.screenW + size * 2, cam.screenH + size * 2);
+    ctx.restore();
   }
 }

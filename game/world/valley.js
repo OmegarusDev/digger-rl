@@ -69,7 +69,8 @@ export function createValley(seed) {
     const d = riverDist(x, y);
     const hw = riverHalfWidth(x);
     if (d < hw) return "water";
-    if (d < hw + 0.8) return "shore";
+    const shoreW = 0.55 + fbm(warpN, x * 0.11 + 61, y * 0.11 + 23, 2) * 0.85;
+    if (d < hw + Math.max(0.15, shoreW)) return "shore";
     const m = moistureAt(x, y);
     const edge = fbm(warpN, x * 0.09 + 91, y * 0.09 + 31, 2) * 0.12;
     if (m > 0.16 + edge) return "forest";

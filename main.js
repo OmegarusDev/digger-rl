@@ -29,7 +29,7 @@ const cam = new WorldCamera(canvas, {
 
 const terrain = new SmoothTerrain({
   sample: makeTerrainSampler(sim.state.valley, P, seed),
-  step: 0.5,
+  step: 0.4,
   light: P.fx.light,
   dark: P.fx.dark,
 });
@@ -97,7 +97,7 @@ function frame(dt) {
   if (input.isDown("KeyW") || input.isDown("ArrowUp")) pdy -= 1;
   if (input.isDown("KeyS") || input.isDown("ArrowDown")) pdy += 1;
   if (pdx || pdy) {
-    cam.panBy(pdx * pan, pdy * pan);
+    cam.panBy(-pdx * pan, -pdy * pan);
     follow = false;
   }
   if (io.click && io.click.button === 0) {
