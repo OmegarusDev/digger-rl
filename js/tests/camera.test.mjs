@@ -72,12 +72,16 @@ for (const taper of [0, 0.5, 1]) {
   const cam = makeCam({ taper: 1, zoom: 0.45 });
   assert.ok(Math.abs(cam.V.pitchDeg - 12) < 0.01, `min zoom -> min pitch (${cam.V.pitchDeg})`);
   const cam2 = makeCam({ taper: 1, zoom: 2.6 });
-  assert.ok(Math.abs(cam2.V.pitchDeg - 46) < 0.01, `max zoom -> max pitch (${cam2.V.pitchDeg})`);
+  assert.ok(Math.abs(cam2.V.pitchDeg - 54) < 0.01, `max zoom -> max pitch (${cam2.V.pitchDeg})`);
   const mid = makeCam({ taper: 1, zoom: 1.5 });
   const a = mid.V.pitchDeg;
   mid.setZoom(0.45);
   mid.tick(1);
   assert.ok(mid.V.pitchDeg < a, "pitch decreases as zoom decreases");
+  const camHi = makeCam({ taper: 1, zoom: 2.2 });
+  const camLo = makeCam({ taper: 1, zoom: 1.0 });
+  assert.ok(camHi.V.vExag > camLo.V.vExag, "vertical exaggeration grows with pitch");
+  assert.ok(camHi.farScale < camLo.farScale, "ground taper strengthens with pitch");
 }
 
 {

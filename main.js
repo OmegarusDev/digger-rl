@@ -5,10 +5,13 @@ import { Input } from "./forge/input.js";
 import { GameLoop } from "./forge/loop.js";
 import { makePalette } from "./forge/palette.js";
 import { createSim } from "./game/sim/sim.js";
-import { findFloraNear } from "./game/sim/founder.js";
+import { findFloraNear, findBuildingNear, carryTotal } from "./game/sim/founder.js";
+import { canPlace, placeBuilding } from "./game/sim/state.js";
+import { BUILDINGS } from "./game/data/buildings.js";
 import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
 import { createHud } from "./game/ui/hud.js";
+import { createBuildBar } from "./game/ui/buildbar.js";
 import { createSplash } from "./game/ui/splash.js";
 
 const params = new URLSearchParams(location.search);
@@ -43,18 +46,48 @@ sim.state.bus.on("fell", (e) => {
   cam.shake(2.2);
 });
 sim.state.bus.on("deposit", (e) => {
-  fx.float(e.x, e.y - 0.5, `+${e.n} wood`, "#e9dfc6");
+  fx.float(e.x, e.y - 0.5, `+${e.n}`, "#e9dfc6");
   fx.emit("pop", e.x, e.y, {});
 });
+sim.state.bus.on("build", (e) => fx.emit("dust", e.x, e.y - 0.2, { count: 3 }));
+sim.state.bus.on("built", (e) => {
+  fx.emit("dust", e.x, e.y, { count: 9 });
+  fx.emit("pop", e.x, e.y, {});
+  cam.shake(1.6);
+});
+sim.state.bus.on("saw", (e) => fx.emit("chips", e.x + 0.25, e.y - 0.35, { count: 3 }));
+sim.state.bus.on("pickHit", (e) => fx.emit("leafPuff", e.x, e.y, { count: 3, color: "#b8452f" }));
+sim.state.bus.on("mineHit", (e) => fx.emit("spark", e.x, e.y - 0.25, { count: 4, color: "#c8c2b4" }));
 
 const input = new Input(canvas);
 const hud = createHud(document.getElementById("ui"));
-createSplash(document.getElementById("ui"), {
-  seed,
-  onBegin: () => hud.toast(`Valley seed ${seed} — WASD moves the founder, SPACE works the nearest tree`),
+
+let placing = null;
+const buildbar = createBuildBar(document.getElementById("ui"), BUILDINGS, {
+  onPick: (kindId) => {
+    placing = kindId;
+    hud.toast(`${BUILDINGS[kindId].name} — click a clear tile to place it, right-click to cancel`);
+  },
+  onCancel: () => {
+    placing = null;
+  },
 });
 
-window.__game = { sim, cam };
+createSplash(document.getElementById("ui"), {
+  seed,
+  onBegin: () => hud.toast(`Valley seed ${seed} — WASD moves the founder, SPACE works the nearest thing`),
+});
+
+window.__game = {
+  sim,
+  cam,
+  BUILDINGS,
+  placeBuilding: (kind, x, y) => placeBuilding(sim.state, kind, x, y),
+  setPlacing: (k) => {
+    placing = k;
+    buildbar.setActive(k);
+  },
+};
 
 let follow = true;
 let t = 0;
@@ -78,16 +111,27 @@ function frame(dt) {
     } else if (k === "Digit1") loop.speed = 1;
     else if (k === "Digit2") loop.speed = 2;
     else if (k === "Digit3") loop.speed = 4;
-    else if (k === "KeyF") {
+    else if (k === "KeyB") {
+      placing = placing === "hut" ? null : "hut";
+      buildbar.setActive(placing);
+      if (placing === "hut") hud.toast("Woodcutter's Hut — click a clear tile, right-click to cancel");
+    } else if (k === "KeyV") {
+      placing = placing === "store" ? null : "store";
+      buildbar.setActive(placing);
+      if (placing === "store") hud.toast("Storehouse — click a clear tile, right-click to cancel");
+    } else if (k === "KeyF") {
       follow = !follow;
       hud.toast(follow ? "Following the founder" : "Free camera");
     } else if (k === "Space") {
       if (f.workLatch) {
         f.workLatch = false;
-        f.workTargetId = null;
+        f.workTarget = null;
       } else {
         f.workLatch = true;
       }
+    } else if (k === "Escape" || k === "RightClick") {
+      placing = null;
+      buildbar.setActive(null);
     }
   }
 
@@ -109,27 +153,54 @@ function frame(dt) {
   if (input.isDown("KeyS") || input.isDown("ArrowDown")) mdy += 1;
   f.cmd = { dx: mdx, dy: mdy };
 
-  if (io.click && io.click.button === 0) {
-    const w = cam.screenToWorld(io.click.x, io.click.y);
-    const hit = findFloraNear(sim.state, w.x, w.y, 0.9);
-    if (hit && (hit.kind === "tree" || hit.kind === "rock")) {
-      f.workLatch = false;
-      f.workTargetId = hit.id;
+  let ghost = null;
+  let hoverItem = null;
+  let hoverBuilding = null;
+  if (input.mouseInside) {
+    const hw = cam.screenToWorld(input.mouseX, input.mouseY);
+    if (placing) {
+      const cx = Math.floor(hw.x);
+      const cy = Math.floor(hw.y);
+      const check = canPlace(sim.state, placing, cx + 0.5, cy + 0.5);
+      ghost = { kind: placing, x: cx + 0.5, y: cy + 0.5, valid: check.ok, reason: check.reason };
+    } else {
+      hoverItem = findFloraNear(sim.state, hw.x, hw.y, 0.8);
+      hoverBuilding = findBuildingNear(sim.state, hw.x, hw.y, 0.5);
     }
   }
 
-  let hoverItem = null;
-  if (input.mouseInside) {
-    const hw = cam.screenToWorld(input.mouseX, input.mouseY);
-    hoverItem = findFloraNear(sim.state, hw.x, hw.y, 0.8);
+  if (io.click && io.click.button === 0) {
+    const w = cam.screenToWorld(io.click.x, io.click.y);
+    if (placing) {
+      const check = canPlace(sim.state, placing, w.x, w.y);
+      if (check.ok) {
+        placeBuilding(sim.state, placing, w.x, w.y);
+        hud.toast(`${BUILDINGS[placing].name} site marked — work it to raise it`);
+        placing = null;
+        buildbar.setActive(null);
+      } else {
+        hud.toast(check.reason);
+      }
+    } else {
+      const hit = findFloraNear(sim.state, w.x, w.y, 0.9);
+      const hitB = findBuildingNear(sim.state, w.x, w.y, 0.55);
+      if (hit) {
+        f.workLatch = false;
+        f.workTarget = { type: "flora", id: hit.id };
+      } else if (hitB) {
+        f.workLatch = false;
+        f.workTarget = { type: "building", id: hitB.id, x: hitB.x, y: hitB.y };
+      }
+    }
   }
 
   if (follow) cam.follow(f.x, f.y);
   cam.tick(dt);
 
   cam.clear(ctx, "#0f130a");
-  renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem });
-  hud.update(sim.state);
+  renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost });
+  buildbar.refresh(sim.state.stores);
+  hud.update(sim.state, f);
 }
 
 loop.start();

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createSim } from "../../game/sim/sim.js";
-import { astar, isWalkable } from "../../game/sim/grid.js";
+import { astar, isWalkable, pathTo } from "../../game/sim/grid.js";
 import { SEASONS } from "../../game/sim/time.js";
+import { carryTotal } from "../../game/sim/founder.js";
 
 function run(sim, seconds) {
   const step = 1 / 30;
@@ -67,10 +68,10 @@ function run(sim, seconds) {
     (it) => it.kind === "tree" && it.state === "alive" && Math.hypot(it.x - f.x, it.y - f.y) < 16
   );
   assert.ok(tree, "test tree exists near spawn");
-  f.workTargetId = tree.id;
+  f.workTarget = { type: "flora", id: tree.id };
   run(sim, 25);
   assert.ok(tree.state !== "alive", "clicked tree was felled");
-  assert.ok(f.carry > 0 || state.stores.wood > 0, "wood gathered from clicked tree");
+  assert.ok(carryTotal(f) > 0 || state.stores.wood > 0, "wood gathered from clicked tree");
 }
 
 {
@@ -96,7 +97,7 @@ function run(sim, seconds) {
   f.workLatch = true;
   run(sim, 15);
   assert.ok(tree.state !== "alive", "space latch felled nearest tree");
-  assert.ok(f.carry > 0 || state.stores.wood > 0, "space latch gathered wood");
+  assert.ok(carryTotal(f) > 0 || state.stores.wood > 0, "space latch gathered wood");
   f.workLatch = false;
 }
 
@@ -118,8 +119,42 @@ function run(sim, seconds) {
   const sim = createSim(777);
   run(sim, 60);
   const f = sim.state.founder;
-  assert.ok(f.carry <= f.carryMax, "carry capped");
-  assert.ok(f.carry >= 0, "carry non-negative");
+  const tot = carryTotal(f);
+  assert.ok(tot <= f.carryMax, "carry capped");
+  assert.ok(tot >= 0, "carry non-negative");
+}
+
+{
+  const sim = createSim(777);
+  const state = sim.state;
+  const f = state.founder;
+  run(sim, 1);
+  const berry = state.flora.find(
+    (it) => it.kind === "berry" && it.state === "alive" && Math.hypot(it.x - f.x, it.y - f.y) < 16
+  );
+  const rock = state.flora.find(
+    (it) =>
+      it.kind === "rock" &&
+      it.state === "alive" &&
+      Math.hypot(it.x - f.x, it.y - f.y) < 16 &&
+      pathTo(state, f.x, f.y, it.x, it.y)
+  );
+  assert.ok(berry || rock, "berries or rocks exist");
+  if (berry) {
+    f.workTarget = { type: "flora", id: berry.id };
+    run(sim, 20);
+    assert.ok(berry.state === "picked", "berries picked");
+    assert.ok(carryTotal(f) > 0 || state.stores.food > 0, "food gathered");
+    f.workTarget = null;
+    f.workLatch = false;
+  }
+  if (rock) {
+    run(sim, 1);
+    f.workTarget = { type: "flora", id: rock.id };
+    run(sim, 20);
+    assert.ok(rock.state === "gone", "rock quarried out");
+    assert.ok(state.stores.stone > 0 || f.carry.stone > 0, "stone gathered");
+  }
 }
 
 console.log("sim.test OK");

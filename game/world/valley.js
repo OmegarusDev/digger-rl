@@ -130,15 +130,15 @@ export function createValley(seed) {
             });
           }
         } else if (t === "meadow") {
-          if (h < 0.045) {
+          if (h < 0.018) {
             out.push({ kind: "rock", x: jx, y: jy, variant: Math.floor(h * 200) % 3, scale: 0.8 + h * 4 });
-          } else if (h < 0.1) {
+          } else if (h < 0.07) {
             out.push({ kind: "bush", x: jx, y: jy, variant: 0, scale: 0.9 + h * 2 });
-          } else if (h < 0.115) {
+          } else if (h < 0.085) {
             out.push({ kind: "berry", x: jx, y: jy, variant: 0, scale: 0.95 });
           }
         } else if (t === "grass") {
-          if (h < 0.02) {
+          if (h < 0.008) {
             out.push({ kind: "rock", x: jx, y: jy, variant: Math.floor(h * 300) % 3, scale: 0.9 + h * 6 });
           }
         }

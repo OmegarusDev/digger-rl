@@ -67,11 +67,11 @@ export function drawCamp(ctx, cam, P, state, t) {
   const pile = Math.min(4, Math.ceil(state.stores.wood / 6));
   for (let i = 0; i < pile; i++) {
     const lp = cam.project(px + 1.15, py - 0.4 + 0.55);
-    const ly = lp.y - i * 3.2 * cam.zoom * stash.s;
+    const ly = lp.y - i * 0.075 * cam.scale * stash.s;
     ctx.fillStyle = P.agent.log;
-    ctx.fillRect(lp.x - w * 0.3, ly - 2.6 * cam.zoom * stash.s, w * 0.6, 2.6 * cam.zoom * stash.s);
+    ctx.fillRect(lp.x - w * 0.3, ly - 0.06 * cam.scale * stash.s, w * 0.6, 0.06 * cam.scale * stash.s);
     ctx.fillStyle = "rgba(255,240,200,0.14)";
-    ctx.fillRect(lp.x - w * 0.3, ly - 2.6 * cam.zoom * stash.s, w * 0.6, 0.8 * cam.zoom * stash.s);
+    ctx.fillRect(lp.x - w * 0.3, ly - 0.06 * cam.scale * stash.s, w * 0.6, 0.02 * cam.scale * stash.s);
   }
 
   const fire = cam.project(px - 0.9, py + 0.55);
@@ -114,7 +114,7 @@ export function drawFireGlow(ctx, cam, P, state, darkness) {
   if (darkness <= 0.02) return;
   const c = state.camp;
   const fire = cam.project(c.x + 0.5 - 0.9, c.y + 0.5 + 0.55);
-  const r = 90 * cam.zoom * fire.s;
+  const r = 2.1 * cam.scale * fire.s;
   const pulse = 0.8 + Math.sin(performance.now() / 320) * 0.08;
   const g = ctx.createRadialGradient(fire.x, fire.y, 4, fire.x, fire.y, r * pulse);
   g.addColorStop(0, withAlpha("#f0a050", 0.34 * darkness));

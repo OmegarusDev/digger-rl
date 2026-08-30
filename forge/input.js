@@ -61,7 +61,10 @@ export class Input {
       },
       { passive: false }
     );
-    canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+    canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      this._oneshots.add("RightClick");
+    });
   }
 
   isDown(code) {

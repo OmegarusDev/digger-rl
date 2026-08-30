@@ -1,193 +1,112 @@
-import { SpriteCache } from "../../forge/sprites.js";
+import { drawVisual } from "../../forge/visuals.js";
 
-const BASE = 56;
-const sprites = new SpriteCache();
-
-export function invalidateFlora() {
-  sprites.clear();
-}
-
-function bakeTree(key, w, h, paint) {
-  return sprites.get(key, w, h, paint);
-}
-
-export function drawFlora(ctx, cam, V, P, item, t) {
-  const p = cam.project(item.x, item.y);
-  if (p.y < -80 || p.y > cam.screenH + 80 || p.x < -80 || p.x > cam.screenW + 80) return;
-  const scale = item.scale * cam.zoom * p.s;
-
-  if (item.state === "stump") {
-    drawStump(ctx, P, p.x, p.y, scale);
-    return;
-  }
-
-  const shake = item.shakeT > 0 ? Math.sin(t * 55) * 2.2 * item.shakeT * scale : 0;
-  const fall = item.state === "falling" ? Math.min(1, 1 - item.fallT / 0.9) : 0;
-  const fallEase = fall * fall;
-
-  ctx.save();
-  ctx.translate(p.x + shake, p.y);
-  if (fall > 0) {
-    ctx.rotate(fallEase * 1.45 * (item.variant % 2 === 0 ? 1 : -1));
-    ctx.globalAlpha = fall > 0.85 ? (1 - fall) / 0.15 : 1;
-  }
-
-  if (item.kind === "tree") {
-    drawTreeShadow(ctx, item, p, scale);
-    drawTree(ctx, P, item, scale);
-  } else if (item.kind === "rock") {
-    drawRock(ctx, P, item, scale);
-  } else if (item.kind === "bush" || item.kind === "berry") {
-    drawBush(ctx, P, item, scale, item.kind === "berry");
-  }
-  ctx.restore();
-}
-
-function drawTreeShadow(ctx, item, p, scale) {
-  const lean = item.species === "pine" ? 0 : 0.1;
-  ctx.fillStyle = "rgba(14,16,8,0.22)";
-  ctx.beginPath();
-  ctx.ellipse(p.x + lean * scale, p.y + 0.06 * scale, 0.42 * scale, 0.19 * scale, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawTree(ctx, P, item, scale) {
-  const key = `tree:${item.species}:${item.variant}`;
-  const w = BASE * 1.5;
-  const h = BASE * 2.1;
-  const spr = bakeTree(key, w, h, (g, gw, gh) => {
-    const cx = gw / 2;
-    const base = gh - 2;
-    const trunkH = gh * 0.34;
-    g.fillStyle = P.flora.trunkDark;
-    g.fillRect(cx - 2.6, base - trunkH, 5.2, trunkH);
-    g.fillStyle = P.flora.trunk;
-    g.fillRect(cx - 2.6, base - trunkH, 2.6, trunkH);
-    g.fillStyle = "rgba(0,0,0,0.18)";
-    g.fillRect(cx + 0.8, base - trunkH, 1.8, trunkH);
-    if (item.species === "pine") {
-      const tint = item.variant === 0 ? P.flora.pineDark : item.variant === 1 ? P.flora.pineLight : "#456238";
-      for (let i = 0; i < 3; i++) {
-        const layerY = base - trunkH + 2 - i * gh * 0.2;
-        const layerW = gw * (0.42 - i * 0.11);
-        const layerH = gh * 0.3;
-        g.fillStyle = i === 2 ? shadeHex(tint, 12) : shadeHex(tint, i === 0 ? -8 : 0);
-        g.beginPath();
-        g.moveTo(cx, layerY - layerH);
-        g.lineTo(cx + layerW / 2, layerY);
-        g.lineTo(cx - layerW / 2, layerY);
-        g.closePath();
-        g.fill();
-        g.fillStyle = "rgba(255,252,230,0.1)";
-        g.beginPath();
-        g.moveTo(cx, layerY - layerH);
-        g.lineTo(cx + layerW * 0.18, layerY);
-        g.lineTo(cx - layerW * 0.05, layerY);
-        g.closePath();
-        g.fill();
-      }
-    } else {
-      const tint = item.variant === 0 ? P.flora.oak : item.variant === 1 ? P.flora.oakLight : "#54713c";
-      const canopyY = base - trunkH - gh * 0.1;
-      g.fillStyle = shadeHex(tint, -18);
-      g.beginPath();
-      g.arc(cx + gw * 0.08, canopyY + gh * 0.05, gw * 0.3, 0, Math.PI * 2);
-      g.arc(cx - gw * 0.16, canopyY + gh * 0.02, gw * 0.24, 0, Math.PI * 2);
-      g.fill();
-      const blobs = [
-        [-0.16, -0.04, 0.24, -4],
-        [0.2, -0.06, 0.22, 0],
-        [0.0, -0.2, 0.26, 6],
-        [-0.04, -0.02, 0.22, 2],
-      ];
-      for (const [ox, oy, r, sh] of blobs) {
-        g.fillStyle = shadeHex(tint, sh);
-        g.beginPath();
-        g.arc(cx + ox * gw, canopyY + oy * gh, r * gw, 0, Math.PI * 2);
-        g.fill();
-      }
-      g.fillStyle = shadeHex(tint, 26);
-      g.beginPath();
-      g.arc(cx - gw * 0.09, canopyY - gh * 0.2, gw * 0.14, 0, Math.PI * 2);
-      g.fill();
-      g.beginPath();
-      g.arc(cx + gw * 0.14, canopyY - gh * 0.12, gw * 0.09, 0, Math.PI * 2);
-      g.fill();
-    }
-  });
-  ctx.drawImage(
-    spr,
-    (-spr.width / 2) * scale,
-    -(spr.height - 2) * scale,
-    spr.width * scale,
-    spr.height * scale
-  );
-}
-
-function drawRock(ctx, P, item, scale) {
-  const r = 0.34 * scale;
-  ctx.fillStyle = P.flora.stoneDark;
-  ctx.beginPath();
-  ctx.ellipse(0, 0.02 * scale, r * 1.1, r * 0.62, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = P.flora.stone;
-  ctx.beginPath();
-  ctx.moveTo(-r, 0);
-  ctx.lineTo(-r * 0.55, -r * 1.15);
-  ctx.lineTo(r * 0.3, -r * 0.95);
-  ctx.lineTo(r, -r * 0.2);
-  ctx.lineTo(r * 0.6, 0.05 * scale);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "rgba(255,250,230,0.16)";
-  ctx.beginPath();
-  ctx.moveTo(-r * 0.5, -r * 0.95);
-  ctx.lineTo(r * 0.25, -r * 0.8);
-  ctx.lineTo(-r * 0.1, -r * 0.45);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawBush(ctx, P, item, scale, berry) {
-  const r = 0.3 * scale;
-  ctx.fillStyle = shadeHex(P.flora.bush, -12);
-  ctx.beginPath();
-  ctx.arc(-r * 0.5, -r * 0.2, r * 0.8, 0, Math.PI * 2);
-  ctx.arc(r * 0.55, -r * 0.15, r * 0.75, 0, Math.PI * 2);
-  ctx.arc(0, -r * 0.55, r * 0.85, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = P.flora.bush;
-  ctx.beginPath();
-  ctx.arc(0, -r * 0.5, r * 0.72, 0, Math.PI * 2);
-  ctx.fill();
-  if (berry) {
-    ctx.fillStyle = P.flora.berry;
-    for (const [ox, oy] of [[-0.4, -0.35], [0.3, -0.5], [0.1, -0.15], [-0.15, -0.6]]) {
-      ctx.beginPath();
-      ctx.arc(ox * r, oy * r, r * 0.14, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-}
-
-function drawStump(ctx, P, x, y, scale) {
-  const r = 0.16 * scale;
-  ctx.fillStyle = P.flora.trunkDark;
-  ctx.beginPath();
-  ctx.ellipse(x, y, r * 1.15, r * 0.6, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = P.flora.trunk;
-  ctx.fillRect(x - r, y - r * 1.4, r * 2, r * 1.4);
-  ctx.fillStyle = "#b09468";
-  ctx.beginPath();
-  ctx.ellipse(x, y - r * 1.4, r, r * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
+const defCache = new Map();
 
 function shadeHex(hex, amt) {
   const n = parseInt(hex.slice(1), 16);
   const r = Math.max(0, Math.min(255, (n >> 16) + amt));
   const g = Math.max(0, Math.min(255, ((n >> 8) & 0xff) + amt));
   const b = Math.max(0, Math.min(255, (n & 0xff) + amt));
-  return `rgb(${r},${g},${b})`;
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
+function pineDef(v) {
+  const tint = ["#3d5a34", "#4c6c3e", "#456238"][v % 3];
+  return [
+    ["shadow", { r: 0.4, a: 0.2 }],
+    ["cyl", { r: 0.06, h: 0.28, top: "#b09468", side: "#6e5236", bottom: "#54402a" }],
+    ["cone", { y: 0.22, w: 0.74, h: 0.44, c: shadeHex(tint, -16) }],
+    ["cone", { y: 0.5, w: 0.56, h: 0.4, c: tint }],
+    ["cone", { y: 0.78, w: 0.38, h: 0.36, c: shadeHex(tint, 16) }],
+    ["blob", { y: 0.98, r: 0.09, c: shadeHex(tint, 24) }],
+  ];
+}
+
+function oakDef(v) {
+  const tint = ["#5d7c40", "#6f8c4c", "#54713c"][v % 3];
+  return [
+    ["shadow", { r: 0.42, a: 0.2 }],
+    ["cyl", { r: 0.07, h: 0.3, top: "#b09468", side: "#6e5236", bottom: "#54402a" }],
+    ["blob", { y: 0.28, x: -0.14, r: 0.2, c: shadeHex(tint, -20) }],
+    ["blob", { y: 0.3, x: 0.16, r: 0.18, c: shadeHex(tint, -14) }],
+    ["blob", { y: 0.42, x: -0.02, r: 0.24, c: tint }],
+    ["blob", { y: 0.46, x: 0.15, r: 0.16, c: shadeHex(tint, 4) }],
+    ["blob", { y: 0.44, x: -0.16, r: 0.15, c: shadeHex(tint, 8) }],
+    ["blob", { y: 0.58, x: -0.04, r: 0.16, c: shadeHex(tint, 22) }],
+    ["blob", { y: 0.54, x: 0.08, r: 0.11, c: shadeHex(tint, 30) }],
+  ];
+}
+
+function rockDef(v) {
+  const r = 0.2 + (v % 3) * 0.04;
+  return [
+    ["shadow", { r: r * 1.7, a: 0.18 }],
+    ["diamond", { r, h: r * 0.75, top: "stoneHi", side: "stone", dark: "stoneDark" }],
+    ["diamond", { x: r * 0.85, y: -0.02, r: r * 0.42, h: r * 0.4, top: "stoneHi", side: "stone", dark: "stoneDark" }],
+  ];
+}
+
+const bushDef = [
+  ["shadow", { r: 0.3, a: 0.16 }],
+  ["blob", { y: 0.04, x: -0.12, r: 0.17, c: "#42603a" }],
+  ["blob", { y: 0.05, x: 0.12, r: 0.15, c: "#4a6c40" }],
+  ["blob", { y: 0.12, r: 0.18, c: "#4c6c3e" }],
+];
+
+const berryDef = [
+  ...bushDef,
+  ["dots", { y: 0.18, r: 0.2, c: "#b8452f", pts: [[-0.5, -0.2], [0.4, -0.5], [0.1, -0.1], [-0.2, -0.7], [0.55, 0.1]] }],
+];
+
+const stumpDef = [
+  ["shadow", { r: 0.18, a: 0.18 }],
+  ["cyl", { r: 0.12, h: 0.12, top: "#c0a274", side: "#8a6a44", bottom: "#685032" }],
+];
+
+function cached(key, make) {
+  let d = defCache.get(key);
+  if (!d) {
+    d = make();
+    defCache.set(key, d);
+  }
+  return d;
+}
+
+export function floraVisual(item, alive) {
+  switch (item.kind) {
+    case "tree":
+      return cached(`${item.species}:${item.variant}`, () => (item.species === "pine" ? pineDef(item.variant) : oakDef(item.variant)));
+    case "rock":
+      return cached(`rock:${item.variant}`, () => rockDef(item.variant));
+    case "bush":
+      return cached("bush", () => bushDef);
+    case "berry":
+      return alive ? cached("berry", () => berryDef) : cached("bush", () => bushDef);
+    case "stump":
+      return cached("stump", () => stumpDef);
+    default:
+      return bushDef;
+  }
+}
+
+export function drawFlora(ctx, cam, P, item, t) {
+  const p = cam.project(item.x, item.y);
+  if (p.y < -120 || p.y > cam.screenH + 120 || p.x < -120 || p.x > cam.screenW + 120) return;
+  const scale = item.scale * cam.scale * p.s;
+
+  let kind = item.kind;
+  if (item.state === "stump") kind = "stump";
+  const alive = item.state === "alive";
+
+  const shake = item.shakeT > 0 ? Math.sin(t * 55) * 2.2 * item.shakeT * scale : 0;
+  const fall = item.state === "falling" ? Math.min(1, 1 - item.fallT / 0.9) : 0;
+
+  ctx.save();
+  ctx.translate(p.x + shake, p.y);
+  if (fall > 0) {
+    ctx.rotate(fall * fall * 1.45 * (item.variant % 2 === 0 ? 1 : -1));
+    ctx.globalAlpha = fall > 0.85 ? (1 - fall) / 0.15 : 1;
+  }
+  drawVisual(ctx, cam.V, floraVisual(item, alive), 0, 0, scale, P.flora);
+  ctx.restore();
 }

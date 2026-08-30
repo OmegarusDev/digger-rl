@@ -29,6 +29,13 @@ function updateFlora(state, dt) {
       }
     } else if (f.state === "alive" && f.shakeT > 0) {
       f.shakeT = Math.max(0, f.shakeT - dt);
+    } else if (f.state === "picked") {
+      f.regrowT -= dt;
+      if (f.regrowT <= 0) {
+        f.state = "alive";
+        f.hp = f.maxHp;
+        state.bus.emit("regrew", { x: f.x, y: f.y, id: f.id });
+      }
     }
   }
 }

@@ -22,6 +22,7 @@ export function makePalette() {
       bush: "#4c6c3e",
       stone: "#8d8578",
       stoneDark: "#6b645a",
+      stoneHi: "#a29a8e",
     },
     agent: {
       skin: ["#d9a877", "#c89668", "#b07f52", "#e2b98c"],
@@ -37,11 +38,15 @@ export function makePalette() {
     building: {
       wall: "#9a8a68",
       wallDark: "#6f6044",
-      roof: "#8a5a3a",
-      roofDark: "#6a442c",
+      roof: "#b0934a",
+      roofDark: "#8a713a",
+      roofHi: "#c9ab5e",
       wood: "#8a6a44",
       woodDark: "#685032",
+      woodHi: "#a8845c",
       canvas: "#c8b892",
+      canvasHi: "#d8c8a2",
+      canvasDark: "#a89878",
       fire: "#e8933a",
     },
     ui: {

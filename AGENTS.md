@@ -14,7 +14,8 @@ CI/publishing: none wired yet beyond the local gate. Run `node verify.mjs` befor
 - **Zero runtime dependencies.** Vanilla ES modules only. Dev tooling must not leak into the game.
 - **No DOM in `game/sim/*`, `game/world/*`, `forge/` math modules.** They must import cleanly under node (tests rely on this). The only DOM touches allowed: `forge/terrain.js`, `forge/sprites.js`, `forge/hud.js`, `game/render/*` painters, `game/ui/*`, `main.js`, `forge/input.js`, `forge/camera.js` (canvas binding only — use `opts.viewport` for headless).
 - **Determinism in sim/world.** Seeded RNG only (`forge/rng.js`). Never `Math.random` in `game/sim` or `game/world`. View-side randomness (fx, shake) is fine.
-- **All projection through `camera.project/unproject`.** Never hand-roll world→screen math in painters. `p.s` is the per-entity scale factor.
+- **All projection through `camera.project/unproject`.** Never hand-roll world→screen math in painters. `p.s` is the taper factor only — sprite pixel size is `world_units * cam.scale * p.s`. Never multiply sizes by `cam.zoom` alone.
+- **Sprites are prim compositions, not baked billboards.** Build visuals as data defs (`[prim, params]`) drawn through `forge/visuals.js` per frame so pitch/zoom re-derive everything (TD lesson). Cache defs, never bake pitch-dependent geometry.
 - **No `console.log`/`console.debug`/`debugger`** anywhere in `forge/` or `game/`.
 - **No comments unless load-bearing.** Prefer names that explain; keep the file count flat.
 

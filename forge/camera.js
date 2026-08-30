@@ -12,7 +12,8 @@ export class WorldCamera {
     this.ppu = opts.ppu ?? 44;
     this.pitchZoom = opts.pitchZoom !== false;
     this.pitchMin = opts.pitchMin ?? 12;
-    this.pitchMax = opts.pitchMax ?? 46;
+    this.pitchMax = opts.pitchMax ?? 54;
+    this.pitchCurve = opts.pitchCurve ?? 1.2;
     this.zoomMin = opts.zoomMin ?? 0.45;
     this.zoomMax = opts.zoomMax ?? 2.6;
     this.world = opts.world ?? null;
@@ -30,7 +31,7 @@ export class WorldCamera {
     this._deriv = null;
     if (this.pitchZoom) {
       const t0 = clamp((this.zoom - this.zoomMin) / (this.zoomMax - this.zoomMin), 0, 1);
-      this.V.setPitch(lerp(this.pitchMin, this.pitchMax, t0));
+      this.V.setPitch(lerp(this.pitchMin, this.pitchMax, Math.pow(t0, this.pitchCurve)));
       this.pitchDeg = this.V.pitchDeg;
     }
     if (opts.viewport) {
@@ -203,7 +204,7 @@ export class WorldCamera {
     this.zoom = lerp(this.zoom, this.targetZoom, zoomT);
     if (this.pitchZoom) {
       const t = clamp((this.zoom - this.zoomMin) / (this.zoomMax - this.zoomMin), 0, 1);
-      this.V.setPitch(lerp(this.pitchMin, this.pitchMax, t));
+      this.V.setPitch(lerp(this.pitchMin, this.pitchMax, Math.pow(t, this.pitchCurve)));
       this.pitchDeg = this.V.pitchDeg;
       this._deriv = null;
     }

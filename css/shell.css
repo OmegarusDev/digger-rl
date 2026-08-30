@@ -212,3 +212,34 @@ html, body {
   font-size: 11px;
   color: var(--ink-faint);
 }
+
+.build-bar {
+  position: absolute;
+  bottom: 44px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+}
+.build-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 7px 12px;
+  background: var(--plate);
+  border: 1px solid var(--plate-edge);
+  border-radius: 6px;
+  color: var(--ink);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.build-btn:hover { border-color: rgba(216, 162, 74, 0.6); }
+.build-btn .build-name { font-size: 13px; letter-spacing: 0.04em; }
+.build-btn .build-cost { font-size: 10.5px; color: var(--ink-dim); letter-spacing: 0.06em; }
+.build-btn.active {
+  border-color: var(--accent);
+  background: rgba(216, 162, 74, 0.16);
+}
+.build-btn.poor .build-cost { color: var(--bad); }
+.build-btn.poor .build-name { color: var(--ink-faint); }
