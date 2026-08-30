@@ -1,4 +1,4 @@
-import { mulberry32, clamp, hash2 } from "../../forge/rng.js";
+import { mulberry32, clamp, hash2, lerp } from "../../forge/rng.js";
 import { createNoise, fbm, ridged } from "../../forge/noise.js";
 
 export const WORLD_SIZE = 72;
@@ -39,7 +39,7 @@ export function createValley(seed) {
       }
   });
 
-  function riverDist(x, y) {
+  function rawRiverDist(x, y) {
     const cx = Math.floor(x / BUCKET);
     const cy = Math.floor(y / BUCKET);
     const arr = buckets.get(bk(cx, cy));
@@ -51,6 +51,27 @@ export function createValley(seed) {
       if (d < best) best = d;
     }
     return Math.sqrt(best);
+  }
+
+  const FIELD_RES = 0.5;
+  const fieldN = Math.ceil(WORLD_SIZE / FIELD_RES) + 4;
+  const distField = new Float32Array(fieldN * fieldN);
+  for (let j = 0; j < fieldN; j++)
+    for (let i = 0; i < fieldN; i++)
+      distField[j * fieldN + i] = rawRiverDist(i * FIELD_RES - 1, j * FIELD_RES - 1);
+
+  function riverDist(x, y) {
+    const gx = clamp((x + 1) / FIELD_RES, 0, fieldN - 1.001);
+    const gy = clamp((y + 1) / FIELD_RES, 0, fieldN - 1.001);
+    const ix = Math.floor(gx);
+    const iy = Math.floor(gy);
+    const fx = gx - ix;
+    const fy = gy - iy;
+    const d00 = distField[iy * fieldN + ix];
+    const d10 = distField[iy * fieldN + ix + 1];
+    const d01 = distField[(iy + 1) * fieldN + ix];
+    const d11 = distField[(iy + 1) * fieldN + ix + 1];
+    return lerp(lerp(d00, d10, fx), lerp(d01, d11, fx), fy);
   }
 
   function riverHalfWidth(x) {

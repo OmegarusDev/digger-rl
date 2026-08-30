@@ -36,7 +36,8 @@ const cam = new WorldCamera(canvas, {
 
 const terrain = new SmoothTerrain({
   sample: makeTerrainSampler(sim.state.valley, P, seed),
-  step: 0.4,
+  worldSize: sim.state.size,
+  masterStep: 0.1,
 });
 
 const fx = new FxSystem();
@@ -93,6 +94,9 @@ window.__game = {
     placing = k;
     buildbar.setActive(k);
   },
+  get terrainDone() {
+    return terrain.done;
+  },
   lastError: null,
 };
 
@@ -119,6 +123,7 @@ function frame(dt) {
 
 function frameInner(dt) {
   t += dt;
+  if (!terrain.done) terrain.bakeChunk(64);
   const ctx = canvas.getContext("2d");
   const io = input.consumeOneShots();
   const f = sim.state.founder;
