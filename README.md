@@ -1,84 +1,63 @@
+<p align="center">
+  <a href="https://omegarusdev.github.io/digger-rl/" style="display:inline-block;padding:16px 52px;font:bold 26px sans-serif;color:#fff;background:#1f9d2f;border-radius:12px;text-decoration:none;">▶ PLAY DIGGER RL</a>
+</p>
+<p align="center">
+  <a href="https://omegarusdev.github.io/digger-rl/">
+    <img src="https://img.shields.io/badge/▶_PLAY_NOW-playable_in_browser-brightgreen?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Play Now" height="40" />
+  </a>
+</p>
+<p align="center"><strong>No install.</strong> Works in the browser (desktop &amp; mobile).</p>
+
 # Digger RL
 
-A medieval village roguelite. You are the Founder — an actual body in the world, not a
-hand of god. Fell the first trees with your own axe, and build a commons where nobody
-goes hungry. When you fall, the next Founder rises stronger.
+A medieval village roguelite — be the Founder, work the commons, and hold the line when winter comes.
 
-Named for **The Diggers** (1649) — who settled common land and held that the earth was
-"a common treasury for all". There is no coin here. If bread is made, people come and
-take bread. Your job is to make sure it always is.
+## What it is
 
-Built on the **Forge engine** — a hybrid graphics engine extracted from Project Tower
-Defense (the 2.5D perspective trickery) and Gunship: Freedom Protocol (smooth sampled
-terrain, cameras, noise). Zero runtime dependencies. Every sprite, sound and texture
-is drawn or synthesized in code.
+You are the Founder — an actual body in the world, not a hand of god. Fell the first trees with your own axe, raise a village on common land, and keep every soul fed through the seasons. When you fall, the next Founder rises stronger.
 
-## Status
+- **Zero runtime dependencies.** No frameworks, no bundler, no asset packs.
+- **All art drawn in code.** Procedural 2.5D prim sprites, smooth sampled terrain, dynamic sun shadows.
+- **A living valley.** Day/night cycle with a seasonal sun — day length and shadow angle change as the year turns.
+- **Commons economy.** No coin: if bread is made, people come and take bread. Production balance is the whole game.
+- **Forge engine.** A standalone graphics engine hybridizing Project Tower Defense's faux-3D trickery with Gunship's smooth terrain.
 
-Early milestone build (M0–M2): valley generation, day/night cycle, and the Founder
-living off the land — chopping, hauling, skill growth.
-
-## Run
-
-```bash
-python3 -m http.server 8080
-# open http://localhost:8080
-```
-
-Add `?seed=12345` to replay a specific valley.
+Named for **The Diggers** (1649) — who settled common land and held that the earth was "a common treasury for all".
 
 ## Controls
 
 | Input | Action |
 |---|---|
-| drag / WASD / arrows | pan camera |
-| wheel | zoom at cursor |
-| left click | send the Founder |
-| `Space` | pause |
-| `1` / `2` / `3` | game speed ×1 / ×2 / ×4 |
+| `WASD` / arrows | move the Founder |
+| `SPACE` | work the closest thing in reach (enemies first) |
+| Left click | inspect / work a thing · place buildings |
+| `B` / `V` | build menu — Woodcutter's Hut / Storehouse |
+| Wheel | zoom (camera pitches down as you zoom in) |
+| Drag | free camera |
 | `F` | toggle founder follow cam |
+| `1` / `2` / `3` | game speed ×1 / ×2 / ×4 |
+| `P` | pause |
 
-## Verify
+## How to play
+
+Chop trees and pick berries by hand → drop goods at the **Supply Wagon** → spend wood at the **BUILD** menu to raise buildings (work construction sites to build them) → keep food and firewood flowing before winter bites. More hands arrive when there is housing and food to spare. Bandits come for your stores — the Founder fights too.
+
+## Run locally
 
 ```bash
-node verify.mjs
+npm run serve        # or: python3 tools/serve.py
+# open http://localhost:8080
 ```
 
-Parse-checks every module and runs the headless test suite (camera projection
-roundtrips, world determinism, founder economy, pathfinding, FX caps).
+Add `?seed=12345` to replay a specific valley.
 
-## Layout
+## Development
 
-```
-forge/            the graphics engine (portable, zero game imports)
-  camera.js       WorldCamera: scroll/zoom/follow/shake + TD pitch + depth taper
-  view25.js       two-factor faux-3D params (D depth / V vertical) from one pitch
-  prims.js        cyl25/box25/frustum25/diamond/ring/rivet, ground shadows
-  terrain.js      SmoothTerrain: sampled color grid + grain/mottle/macro patterns
-  noise.js        perlin-style noise, fbm, ridged, warp
-  paths.js        chaikin, arc-length sampling, steerAlong, overdraw path renderer
-  fx.js           capped particle system (chips, leaf, smoke, spark, floats)
-  hud.js          plates, headers, bars, offscreen markers
-  input.js        pointer/keys/wheel with one-shot consumption
-  agents.js       procedural 2.5D villager painter
-  sprites.js      offscreen bake cache
-  palette.js      role-nested color themes
-  loop.js         fixed-timestep accumulator with speed multiplier
-  draw.js rng.js  shared utilities
-game/
-  world/valley.js SSOT pure-function valley model (river → shore → forest → meadow)
-  sim/            DOM-free deterministic simulation: state, time, A*, founder FSM
-  render/         terrain sampler, flora painters, camp, scene compositor
-  ui/hud.js       DOM HUD strip
-js/tests/         headless test files (run by verify.mjs)
-```
+- `node verify.mjs` — the gate: parse-checks every module and runs the headless test suite (camera projection roundtrips, world determinism, founder economy, buildings, pathfinding, FX caps).
+- `AGENTS.md` — architecture rules and conventions for contributing.
+- The game is vanilla ES modules with no build step; `forge/` is the portable engine and must never import from `game/`.
 
-## Conventions
+## Links
 
-- **Zero runtime deps.** No frameworks, no bundler, no asset packs.
-- **Determinism.** All world content and simulation flow through seeded RNG.
-  No `Math.random` in `game/sim` or `game/world`.
-- **No DOM in sim.** `game/sim/*` and `game/world/*` must stay headless-testable.
-- **Camera is math.** Every world→screen conversion goes through `camera.project`;
-  the pitch/taper projection can never drift.
-- **Data over classes.** Content = new table entries, not new hierarchies.
+- [PRESENTATION_STYLE.md](https://github.com/OmegarusDev/) — org presentation standard
+- Related repos: [project-tower-defense](https://github.com/OmegarusDev/project-tower-defense), [Gunship](https://github.com/OmegarusDev/Gunship)
