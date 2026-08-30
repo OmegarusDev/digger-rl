@@ -213,33 +213,139 @@ html, body {
   color: var(--ink-faint);
 }
 
-.build-bar {
+.build-fab {
   position: absolute;
-  bottom: 44px;
-  left: 12px;
-  display: flex;
-  gap: 8px;
-}
-.build-btn {
+  bottom: 14px;
+  right: 14px;
+  width: 62px;
+  height: 62px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 7px 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 6px;
   background: var(--plate);
   border: 1px solid var(--plate-edge);
-  border-radius: 6px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.build-fab:hover { border-color: rgba(216, 162, 74, 0.6); }
+.build-fab.active {
+  border-color: var(--accent);
+  background: rgba(216, 162, 74, 0.16);
+}
+
+.build-menu {
+  position: absolute;
+  bottom: 84px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(20, 17, 11, 0.9);
+  border: 1px solid var(--plate-edge);
+  border-radius: 10px;
+  min-width: 200px;
+}
+.build-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(30, 25, 16, 0.7);
+  border: 1px solid var(--plate-edge);
+  border-radius: 8px;
   color: var(--ink);
   font-family: var(--font);
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
 }
-.build-btn:hover { border-color: rgba(216, 162, 74, 0.6); }
-.build-btn .build-name { font-size: 13px; letter-spacing: 0.04em; }
-.build-btn .build-cost { font-size: 10.5px; color: var(--ink-dim); letter-spacing: 0.06em; }
-.build-btn.active {
+.build-card:hover { border-color: rgba(216, 162, 74, 0.6); }
+.build-card.active {
   border-color: var(--accent);
   background: rgba(216, 162, 74, 0.16);
 }
-.build-btn.poor .build-cost { color: var(--bad); }
-.build-btn.poor .build-name { color: var(--ink-faint); }
+.build-card.poor .build-cost { color: var(--bad); }
+.build-card.poor .build-name { color: var(--ink-faint); }
+.build-card .build-txt { display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.build-card .build-name { font-size: 13.5px; letter-spacing: 0.04em; }
+.build-card .build-cost { font-size: 10.5px; color: var(--ink-dim); letter-spacing: 0.06em; }
+
+.info-panel {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  width: 240px;
+  padding: 12px 14px;
+  background: var(--plate);
+  border: 1px solid var(--plate-edge);
+  border-radius: 8px;
+  display: none;
+  pointer-events: none;
+}
+.info-panel.on { display: block; }
+.info-title {
+  font-size: 14.5px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin-bottom: 7px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(216, 162, 74, 0.22);
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  padding: 2px 0;
+  color: var(--ink-dim);
+}
+.info-row b { color: var(--ink); font-weight: 600; }
+.info-bar {
+  margin-top: 8px;
+  height: 6px;
+  background: rgba(14, 12, 7, 0.9);
+  border: 1px solid rgba(216, 162, 74, 0.4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.info-bar-fill { height: 100%; background: var(--accent); width: 0; }
+
+@media (max-width: 720px) {
+  .hud-top {
+    top: 6px;
+    gap: 8px;
+    padding: 5px 10px;
+    font-size: 11.5px;
+    max-width: calc(100vw - 12px);
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 3px;
+  }
+  .hud-top .date { min-width: 0; }
+  .hud-top .clock { min-width: 0; }
+  .hud-hint { display: none; }
+  .hud-paused { font-size: 11px; padding: 4px 8px; }
+  .hud-toast { font-size: 12px; max-width: 88vw; top: 54px; }
+  .build-fab { bottom: 12px; right: 12px; width: 54px; height: 54px; }
+  .build-fab canvas { width: 24px; height: 24px; }
+  .build-menu { bottom: 74px; right: 12px; min-width: 0; width: calc(100vw - 24px); max-width: 260px; }
+  .info-panel {
+    left: 10px;
+    right: auto;
+    bottom: 12px;
+    width: min(52vw, 220px);
+    padding: 10px 12px;
+  }
+  .info-title { font-size: 13px; }
+  .info-row { font-size: 11.5px; }
+  .title-card { padding: 28px 20px 24px; max-width: 92vw; }
+  .title-name { font-size: 32px; }
+  .title-form { flex-wrap: wrap; }
+}

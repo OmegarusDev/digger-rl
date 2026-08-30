@@ -2,6 +2,7 @@ import { mulberry32 } from "../../forge/rng.js";
 import { createValley } from "../world/valley.js";
 import { createBus } from "./bus.js";
 import { BUILDINGS } from "../data/buildings.js";
+import { DAY_LEN } from "./time.js";
 
 const TREE_HP = 5;
 const ROCK_HP = 8;
@@ -40,7 +41,7 @@ export function createState(seed) {
     nextBuildingId: 1,
     stores: { wood: 0, food: 0, stone: 0 },
     camp: valley.camp,
-    time: { t: 0.3 * 150, day: 1, season: 0, tod: 0.3 },
+    time: { t: 0.3 * DAY_LEN, day: 1, season: 0, tod: 0.3 },
     tick: 0,
     founder: null,
     villagers: [],

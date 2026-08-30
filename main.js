@@ -13,6 +13,7 @@ import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
 import { createHud } from "./game/ui/hud.js";
 import { createBuildBar } from "./game/ui/buildbar.js";
+import { createInfoPanel } from "./game/ui/panel.js";
 import { createSplash } from "./game/ui/splash.js";
 
 const params = new URLSearchParams(location.search);
@@ -63,8 +64,10 @@ sim.state.bus.on("handsFull", (e) => fx.float(e.x, e.y - 0.6, "hands full", "#e9
 
 const input = new Input(canvas);
 const hud = createHud(document.getElementById("ui"));
+const panel = createInfoPanel(document.getElementById("ui"));
 
 let placing = null;
+let selected = null;
 const buildbar = createBuildBar(document.getElementById("ui"), BUILDINGS, {
   onPick: (kindId) => {
     placing = kindId;
@@ -116,11 +119,15 @@ function frame(dt) {
     else if (k === "KeyB") {
       placing = placing === "hut" ? null : "hut";
       buildbar.setActive(placing);
+      if (placing) buildbar.open();
+      else buildbar.close();
       cam._anchor = null;
       if (placing === "hut") hud.toast("Woodcutter's Hut — click a clear tile, right-click to cancel");
     } else if (k === "KeyV") {
       placing = placing === "store" ? null : "store";
       buildbar.setActive(placing);
+      if (placing) buildbar.open();
+      else buildbar.close();
       cam._anchor = null;
       if (placing === "store") hud.toast("Storehouse — click a clear tile, right-click to cancel");
     } else if (k === "KeyF") {
@@ -135,7 +142,9 @@ function frame(dt) {
       }
     } else if (k === "Escape" || k === "RightClick") {
       placing = null;
+      selected = null;
       buildbar.setActive(null);
+      buildbar.close();
     }
   }
 
@@ -188,28 +197,39 @@ function frame(dt) {
     } else {
       const hit = findFloraNear(sim.state, w.x, w.y, 0.9);
       const hitB = findBuildingNear(sim.state, w.x, w.y, 0.55);
-      const target = hit
-        ? { wt: { type: "flora", id: hit.id }, d: Math.hypot(hit.x - f.x, hit.y - f.y) }
-        : hitB
-          ? { wt: { type: "building", id: hitB.id, x: hitB.x, y: hitB.y }, d: Math.hypot(hitB.x - f.x, hitB.y - f.y) }
-          : null;
-      if (target) {
-        if (target.d <= WORK_RANGE + 0.15) {
+      const hitF = Math.hypot(w.x - f.x, w.y - f.y) < 0.8;
+      if (hit) {
+        selected = { type: "flora", id: hit.id };
+        const d = Math.hypot(hit.x - f.x, hit.y - f.y);
+        if (d <= WORK_RANGE + 0.15) {
           f.workLatch = false;
-          f.workTarget = target.wt;
+          f.workTarget = { type: "flora", id: hit.id };
         } else {
           hud.toast("Out of reach — walk closer");
         }
+      } else if (hitB) {
+        selected = { type: "building", id: hitB.id };
+        const d = Math.hypot(hitB.x - f.x, hitB.y - f.y);
+        if (d <= WORK_RANGE + 0.15) {
+          f.workLatch = false;
+          f.workTarget = { type: "building", id: hitB.id, x: hitB.x, y: hitB.y };
+        } else {
+          hud.toast("Out of reach — walk closer");
+        }
+      } else if (hitF) {
+        selected = { type: "founder" };
+      } else {
+        selected = null;
       }
     }
   }
 
   if (follow) cam.follow(f.x, f.y);
   cam.tick(dt);
-
   cam.clear(ctx, "#0f130a");
   renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost });
   buildbar.refresh(sim.state.stores);
+  panel.update(sim.state, selected, f);
   hud.update(sim.state, f);
 }
 

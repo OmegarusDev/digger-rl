@@ -48,7 +48,7 @@ function walkTo(sim, f, x, y, within) {
 
 {
   const sim = createSim(777);
-  run(sim, 150 * 9);
+  run(sim, 360 * 9);
   const t = sim.state.time;
   assert.ok(t.day >= 9, `days advanced (${t.day})`);
   const season = SEASONS[t.season];
