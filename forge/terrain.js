@@ -23,14 +23,21 @@ export class SmoothTerrain {
 
   render(ctx, cam) {
     const d = cam._d();
-    const step = this.step;
     const f = d.f;
     const tapered = f < 0.999;
 
+    const sMid = f + (1 - f) * 0.5;
+    let step = Math.min(this.step, Math.max(0.09, 13 / (cam.scale * sMid)));
     const halfSpanX = cam.screenW / (2 * cam.scale * Math.min(1, f)) + step * 2;
+    let cols = Math.ceil((2 * halfSpanX) / step) + 2;
+    let nRows = Math.ceil(d.K / step) + 3;
+    const maxSamples = 9000;
+    if (cols * nRows > maxSamples) {
+      step = Math.max(0.06, Math.sqrt((2 * halfSpanX * d.K) / maxSamples));
+      cols = Math.ceil((2 * halfSpanX) / step) + 2;
+      nRows = Math.ceil(d.K / step) + 3;
+    }
     const ax = Math.floor((cam.x - halfSpanX) / step) * step;
-    const cols = Math.ceil((2 * halfSpanX) / step) + 2;
-    const nRows = Math.ceil(d.K / step) + 3;
     const ay = Math.floor(d.y0 / step) * step;
 
     const gridKey = `${cols}x${nRows}@${ax},${ay}`;
@@ -42,7 +49,7 @@ export class SmoothTerrain {
         const wy = ay + j * step;
         for (let i = 0; i < cols; i++) {
           const wx = ax + i * step;
-          const c = this.sample(wx, wy);
+          const c = this.sample(wx, wy, i, j);
           const k = (j * cols + i) * 4;
           data[k] = c.r;
           data[k + 1] = c.g;

@@ -1,15 +1,16 @@
 import { drawVisual } from "../../forge/visuals.js";
-import { withAlpha } from "../../forge/draw.js";
+import { drawSunShadow } from "../../forge/sun.js";
+import { withAlpha, drawLabel } from "../../forge/draw.js";
 import { BUILDINGS, SITE_POSTS } from "../data/buildings.js";
-import { drawLabel } from "../../forge/draw.js";
 
-export function drawBuilding(ctx, cam, P, b, hover) {
+export function drawBuilding(ctx, cam, P, b, hover, sun) {
   const p = cam.project(b.x, b.y);
   if (p.y < -140 || p.y > cam.screenH + 140 || p.x < -140 || p.x > cam.screenW + 140) return;
   const s = cam.scale * p.s;
   const def = BUILDINGS[b.kind];
 
   if (b.state === "site") {
+    drawSunShadow(ctx, cam, sun, b.x, b.y, 0.4, 0.45, 0.2);
     drawVisual(ctx, cam.V, SITE_POSTS, p.x, p.y, s, P.building);
     const w = 0.7 * s;
     const frac = b.work / b.maxWork;
@@ -24,6 +25,7 @@ export function drawBuilding(ctx, cam, P, b, hover) {
     return;
   }
 
+  drawSunShadow(ctx, cam, sun, b.x, b.y, 0.58, 0.85, 0.28);
   drawVisual(ctx, cam.V, def.visual, p.x, p.y, s, P.building);
   if (hover) {
     ctx.strokeStyle = withAlpha(P.ui.accent, 0.7);

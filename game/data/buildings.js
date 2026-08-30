@@ -6,7 +6,6 @@ export const BUILDINGS = {
     work: 14,
     job: "sawyer",
     visual: [
-      ["shadow", { r: 0.62, a: 0.24 }],
       ["box", { w: 0.78, d: 0.62, h: 0.4, top: "woodHi", side: "wood", dark: "woodDark" }],
       ["roof", { y: 0.4, w: 0.94, d: 0.78, h: 0.34, c: "roof", top: "roofDark", gable: "woodDark" }],
       ["box", { x: 0.26, y: 0.74, w: 0.08, d: 0.08, h: 0.14, top: "woodHi", side: "wood", dark: "woodDark" }],
@@ -19,7 +18,6 @@ export const BUILDINGS = {
     work: 10,
     deposit: true,
     visual: [
-      ["shadow", { r: 0.55, a: 0.22 }],
       ["box", { w: 0.7, d: 0.55, h: 0.12, top: "woodHi", side: "wood", dark: "woodDark" }],
       ["frustum", { y: 0.12, rxBot: 0.48, rxTop: 0.1, h: 0.46, top: "canvasHi", side: "canvas", dark: "canvasDark" }],
     ],

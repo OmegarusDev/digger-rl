@@ -1,11 +1,11 @@
 import { createNoise, fbm } from "../../forge/noise.js";
-import { clamp, lerp } from "../../forge/rng.js";
+import { clamp, lerp, hash2 } from "../../forge/rng.js";
 
 export function makeTerrainSampler(valley, P, seed) {
   const detail = createNoise(seed * 31 + 5);
   const T = P.terrain;
 
-  return (wx, wy) => {
+  return (wx, wy, gx, gy) => {
     const s = valley.sample(wx, wy);
     let r, g, b;
 
@@ -58,6 +58,11 @@ export function makeTerrainSampler(valley, P, seed) {
     r += grain;
     g += grain;
     b += grain * 0.85;
+
+    const fine = (hash2(gx ?? Math.round(wx * 4), gy ?? Math.round(wy * 4), 91) - 0.5) * 15;
+    r += fine;
+    g += fine;
+    b += fine * 0.85;
 
     return {
       r: Math.max(0, Math.min(255, Math.round(r))),

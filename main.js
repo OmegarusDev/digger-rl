@@ -8,6 +8,7 @@ import { createSim } from "./game/sim/sim.js";
 import { findFloraNear, findBuildingNear, carryTotal } from "./game/sim/founder.js";
 import { canPlace, placeBuilding } from "./game/sim/state.js";
 import { WORK_RANGE } from "./game/sim/founder.js";
+import { inspectableAt } from "./game/sim/inspect.js";
 import { BUILDINGS } from "./game/data/buildings.js";
 import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
@@ -92,6 +93,7 @@ window.__game = {
     placing = k;
     buildbar.setActive(k);
   },
+  lastError: null,
 };
 
 let follow = true;
@@ -104,6 +106,18 @@ const loop = new GameLoop({
 });
 
 function frame(dt) {
+  try {
+    frameInner(dt);
+  } catch (e) {
+    if (!window.__game.lastError) {
+      const stack = (e.stack || "").split("\n").slice(1, 4).join(" | ");
+      window.__game.lastError = `${e.message} @ ${stack}`;
+      hud.toast(`Render error: ${e.message}`);
+    }
+  }
+}
+
+function frameInner(dt) {
   t += dt;
   const ctx = canvas.getContext("2d");
   const io = input.consumeOneShots();
@@ -195,31 +209,17 @@ function frame(dt) {
         hud.toast(check.reason);
       }
     } else {
-      const hit = findFloraNear(sim.state, w.x, w.y, 0.9);
-      const hitB = findBuildingNear(sim.state, w.x, w.y, 0.55);
-      const hitF = Math.hypot(w.x - f.x, w.y - f.y) < 0.8;
-      if (hit) {
-        selected = { type: "flora", id: hit.id };
-        const d = Math.hypot(hit.x - f.x, hit.y - f.y);
+      const insp = inspectableAt(sim.state, w.x, w.y);
+      selected = insp;
+      if (insp && (insp.type === "flora" || insp.type === "building")) {
+        const t = insp.type === "flora" ? state.flora[insp.id] : state.buildings.find((bb) => bb.id === insp.id);
+        const d = Math.hypot(t.x - f.x, t.y - f.y);
         if (d <= WORK_RANGE + 0.15) {
           f.workLatch = false;
-          f.workTarget = { type: "flora", id: hit.id };
+          f.workTarget = insp.type === "flora" ? { type: "flora", id: insp.id } : { type: "building", id: insp.id, x: t.x, y: t.y };
         } else {
           hud.toast("Out of reach — walk closer");
         }
-      } else if (hitB) {
-        selected = { type: "building", id: hitB.id };
-        const d = Math.hypot(hitB.x - f.x, hitB.y - f.y);
-        if (d <= WORK_RANGE + 0.15) {
-          f.workLatch = false;
-          f.workTarget = { type: "building", id: hitB.id, x: hitB.x, y: hitB.y };
-        } else {
-          hud.toast("Out of reach — walk closer");
-        }
-      } else if (hitF) {
-        selected = { type: "founder" };
-      } else {
-        selected = null;
       }
     }
   }

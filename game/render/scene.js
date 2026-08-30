@@ -1,15 +1,17 @@
 import { drawFlora } from "./flora.js";
 import { drawBuilding, drawGhost } from "./buildings.js";
 import { drawFounder, drawCamp, drawFireGlow } from "./camp.js";
-import { darkness } from "../sim/time.js";
 import { WORK_RANGE } from "../sim/founder.js";
 import { withAlpha } from "../../forge/draw.js";
+import { sunState } from "../../forge/sun.js";
 
 export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {}) {
   const state = sim.state;
+  const sun = sunState(state.time);
   cam.begin(ctx);
-  terrainRenderer(ctx, cam);
-  drawCamp(ctx, cam, P, state, t);
+  try {
+    terrainRenderer(ctx, cam);
+    drawCamp(ctx, cam, P, state, t, sun);
 
   const b = cam.getVisibleBounds();
   const drawList = [];
@@ -25,9 +27,9 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
   drawList.push({ y: state.founder.y, founder: true });
   drawList.sort((a, c) => a.y - c.y);
   for (const e of drawList) {
-    if (e.founder) drawFounder(ctx, cam, P, state.founder);
-    else if (e.bd) drawBuilding(ctx, cam, P, e.bd, opts.hoverBuilding?.id === e.bd.id);
-    else drawFlora(ctx, cam, P, e.item, t);
+    if (e.founder) drawFounder(ctx, cam, P, state.founder, sun);
+    else if (e.bd) drawBuilding(ctx, cam, P, e.bd, opts.hoverBuilding?.id === e.bd.id, sun);
+    else drawFlora(ctx, cam, P, e.item, t, sun);
   }
 
   const hov = opts.hoverItem;
@@ -49,18 +51,21 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
   }
 
   fx.draw(ctx, (x, y) => cam.project(x, y), cam.scale);
-  cam.end(ctx);
+  } finally {
+    cam.end(ctx);
+  }
 
-  const tod = state.time.tod;
-  const dark = darkness(tod);
+  ctx.save();
+  ctx.scale(cam.dpr, cam.dpr);
+  const dark = 1 - sun.day;
   if (dark > 0.01) {
-    ctx.fillStyle = `rgba(10,12,34,${(dark * 0.42).toFixed(3)})`;
+    ctx.fillStyle = `rgba(10,12,34,${(dark * 0.44).toFixed(3)})`;
     ctx.fillRect(0, 0, cam.screenW, cam.screenH);
   }
-  const glow = Math.max(0, 1 - Math.abs(tod - 0.8) / 0.12);
-  if (glow > 0.01) {
-    ctx.fillStyle = `rgba(232,140,70,${(glow * 0.1).toFixed(3)})`;
+  if (sun.warmth > 0.01) {
+    ctx.fillStyle = `rgba(236,146,66,${(sun.warmth * 0.13).toFixed(3)})`;
     ctx.fillRect(0, 0, cam.screenW, cam.screenH);
   }
   drawFireGlow(ctx, cam, P, state, dark);
+  ctx.restore();
 }

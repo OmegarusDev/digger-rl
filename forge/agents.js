@@ -1,4 +1,4 @@
-export function drawAgent(ctx, p, a, skin, V, unit) {
+export function drawAgent(ctx, p, a, skin, V, unit, sun) {
   const s = p.s;
   const u = unit * s;
   const x = p.x;
@@ -8,10 +8,16 @@ export function drawAgent(ctx, p, a, skin, V, unit) {
   const face = Math.cos(a.dir) < 0 ? -1 : 1;
   const legSwing = a.moving ? Math.sin(a.phase * Math.PI * 2) * 0.09 * u : 0;
 
-  ctx.fillStyle = "rgba(16,14,8,0.3)";
-  ctx.beginPath();
-  ctx.ellipse(x + u * 0.02, groundY, 0.13 * u, 0.13 * u * V.deckRatio, 0, 0, Math.PI * 2);
-  ctx.fill();
+  if (sun && sun.day > 0.03) {
+    const len = Math.min(0.7, Math.max(0.25, 0.55 / Math.max(0.22, sun.alt))) * u;
+    const dirx = -Math.cos(sun.az);
+    const diry = -Math.sin(sun.az) * 0.9;
+    const rx = len * 0.45 + 0.12 * u;
+    ctx.fillStyle = `rgba(16,18,10,${(0.3 * (0.45 + 0.55 * sun.day)).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.ellipse(x + dirx * len * 0.4, groundY + diry * len * 0.4, rx, Math.max(1.2, rx * 0.38), Math.atan2(diry, dirx), 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.save();
   ctx.translate(x, groundY + bob);

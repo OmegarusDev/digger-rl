@@ -1,4 +1,5 @@
 import { drawVisual } from "../../forge/visuals.js";
+import { drawSunShadow } from "../../forge/sun.js";
 
 const defCache = new Map();
 
@@ -13,7 +14,6 @@ function shadeHex(hex, amt) {
 function pineDef(v) {
   const tint = ["#3d5a34", "#4c6c3e", "#456238"][v % 3];
   return [
-    ["shadow", { r: 0.4, a: 0.2 }],
     ["cyl", { r: 0.06, h: 0.28, top: "#b09468", side: "#6e5236", bottom: "#54402a" }],
     ["cone", { y: 0.22, w: 0.74, h: 0.44, c: shadeHex(tint, -16) }],
     ["cone", { y: 0.5, w: 0.56, h: 0.4, c: tint }],
@@ -25,7 +25,6 @@ function pineDef(v) {
 function oakDef(v) {
   const tint = ["#5d7c40", "#6f8c4c", "#54713c"][v % 3];
   return [
-    ["shadow", { r: 0.42, a: 0.2 }],
     ["cyl", { r: 0.07, h: 0.3, top: "#b09468", side: "#6e5236", bottom: "#54402a" }],
     ["blob", { y: 0.28, x: -0.14, r: 0.2, c: shadeHex(tint, -20) }],
     ["blob", { y: 0.3, x: 0.16, r: 0.18, c: shadeHex(tint, -14) }],
@@ -40,14 +39,12 @@ function oakDef(v) {
 function rockDef(v) {
   const r = 0.2 + (v % 3) * 0.04;
   return [
-    ["shadow", { r: r * 1.7, a: 0.18 }],
     ["diamond", { r, h: r * 0.75, top: "stoneHi", side: "stone", dark: "stoneDark" }],
     ["diamond", { x: r * 0.85, y: -0.02, r: r * 0.42, h: r * 0.4, top: "stoneHi", side: "stone", dark: "stoneDark" }],
   ];
 }
 
 const bushDef = [
-  ["shadow", { r: 0.3, a: 0.16 }],
   ["blob", { y: 0.04, x: -0.12, r: 0.17, c: "#42603a" }],
   ["blob", { y: 0.05, x: 0.12, r: 0.15, c: "#4a6c40" }],
   ["blob", { y: 0.12, r: 0.18, c: "#4c6c3e" }],
@@ -58,10 +55,15 @@ const berryDef = [
   ["dots", { y: 0.18, r: 0.2, c: "#b8452f", pts: [[-0.5, -0.2], [0.4, -0.5], [0.1, -0.1], [-0.2, -0.7], [0.55, 0.1]] }],
 ];
 
-const stumpDef = [
-  ["shadow", { r: 0.18, a: 0.18 }],
-  ["cyl", { r: 0.12, h: 0.12, top: "#c0a274", side: "#8a6a44", bottom: "#685032" }],
-];
+const stumpDef = [["cyl", { r: 0.12, h: 0.12, top: "#c0a274", side: "#8a6a44", bottom: "#685032" }]];
+
+const SHAPES = {
+  tree: { fp: 0.4, h: 1.15 },
+  rock: { fp: 0.38, h: 0.32 },
+  bush: { fp: 0.28, h: 0.24 },
+  berry: { fp: 0.28, h: 0.24 },
+  stump: { fp: 0.18, h: 0.14 },
+};
 
 function cached(key, make) {
   let d = defCache.get(key);
@@ -89,14 +91,19 @@ export function floraVisual(item, alive) {
   }
 }
 
-export function drawFlora(ctx, cam, P, item, t) {
+export function drawFlora(ctx, cam, P, item, t, sun) {
   const p = cam.project(item.x, item.y);
-  if (p.y < -120 || p.y > cam.screenH + 120 || p.x < -120 || p.x > cam.screenW + 120) return;
+  if (p.y < -160 || p.y > cam.screenH + 160 || p.x < -160 || p.x > cam.screenW + 160) return;
   const scale = item.scale * cam.scale * p.s;
 
   let kind = item.kind;
   if (item.state === "stump") kind = "stump";
   const alive = item.state === "alive";
+  const shape = SHAPES[kind] || SHAPES.bush;
+
+  if (item.state !== "falling") {
+    drawSunShadow(ctx, cam, sun, item.x, item.y, shape.fp, shape.h * item.scale);
+  }
 
   const shake = item.shakeT > 0 ? Math.sin(t * 55) * 2.2 * item.shakeT * scale : 0;
   const fall = item.state === "falling" ? Math.min(1, 1 - item.fallT / 0.9) : 0;

@@ -244,13 +244,11 @@ export class WorldCamera {
   }
 
   begin(ctx) {
-    ctx.save();
-    ctx.scale(this.dpr, this.dpr);
-    ctx.translate(this.shakeX, this.shakeY);
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, this.shakeX * this.dpr, this.shakeY * this.dpr);
   }
 
   end(ctx) {
-    ctx.restore();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   clear(ctx, color = "#0c0e09") {

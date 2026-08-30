@@ -1,6 +1,7 @@
 import { box25 } from "../../forge/prims.js";
 import { mats, withAlpha } from "../../forge/draw.js";
 import { drawAgent } from "../../forge/agents.js";
+import { drawSunShadow } from "../../forge/sun.js";
 
 export function makeFounderSkin(P) {
   return {
@@ -17,7 +18,7 @@ export function makeFounderSkin(P) {
   };
 }
 
-export function drawFounder(ctx, cam, P, founder) {
+export function drawFounder(ctx, cam, P, founder, sun) {
   const p = cam.project(founder.x, founder.y);
   const skin = makeFounderSkin(P);
   drawAgent(
@@ -29,12 +30,13 @@ export function drawFounder(ctx, cam, P, founder) {
       dir: founder.dir,
       action: founder.action,
       swing: founder.swing,
-      carry: founder.carry,
+      carry: carryCount(founder),
       flash: 0,
     },
     skin,
     cam.V,
-    cam.scale
+    cam.scale,
+    sun
   );
   ctx.strokeStyle = withAlpha(P.ui.accent, 0.35);
   ctx.lineWidth = 1.5;
@@ -44,7 +46,11 @@ export function drawFounder(ctx, cam, P, founder) {
   ctx.lineWidth = 1;
 }
 
-export function drawCamp(ctx, cam, P, state, t) {
+function carryCount(f) {
+  return (f.carry?.wood ?? 0) + (f.carry?.food ?? 0) + (f.carry?.stone ?? 0);
+}
+
+export function drawCamp(ctx, cam, P, state, t, sun) {
   const c = state.camp;
   const px = c.x + 0.5;
   const py = c.y + 0.5;
@@ -55,14 +61,23 @@ export function drawCamp(ctx, cam, P, state, t) {
   const w = 0.62 * scale * stash.s;
   const d = 0.5 * scale * stash.s;
   const h = 0.52 * scale * stash.s * cam.V.vExag;
-  ctx.fillStyle = "rgba(16,14,8,0.3)";
-  ctx.beginPath();
-  ctx.ellipse(stash.x + 2, stash.y + 2, w * 0.62, w * 0.32, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawSunShadow(ctx, cam, sun, px + 1.15, py - 0.4, 0.45, 0.6, 0.28);
   box25(cam.V, ctx, stash.x, stash.y - h, w, d, h, m);
   ctx.strokeStyle = "rgba(40,30,16,0.5)";
   ctx.lineWidth = 1;
   ctx.strokeRect(stash.x - w * 0.18, stash.y - h * 0.72, w * 0.36, h * 0.4);
+  ctx.fillStyle = "#3a3026";
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(stash.x + side * w * 0.32, stash.y + 0.06 * scale * stash.s, 0.09 * scale * stash.s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = P.building.woodDark;
+  ctx.lineWidth = Math.max(1.5, 0.05 * scale * stash.s);
+  ctx.beginPath();
+  ctx.moveTo(stash.x - w * 0.55, stash.y + 0.1 * scale * stash.s);
+  ctx.lineTo(stash.x + w * 0.55, stash.y + 0.1 * scale * stash.s);
+  ctx.stroke();
 
   const pile = Math.min(4, Math.ceil(state.stores.wood / 6));
   for (let i = 0; i < pile; i++) {
@@ -76,6 +91,7 @@ export function drawCamp(ctx, cam, P, state, t) {
 
   const fire = cam.project(px - 0.9, py + 0.55);
   const fr = 0.3 * scale * fire.s;
+  drawSunShadow(ctx, cam, sun, px - 0.9, py + 0.55, 0.32, 0.12, 0.18);
   ctx.fillStyle = "#5c544a";
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * Math.PI * 2;

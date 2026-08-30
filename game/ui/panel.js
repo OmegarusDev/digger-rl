@@ -45,6 +45,18 @@ export function createInfoPanel(root) {
           ["woodcraft", `${Math.round((f.skills.wood || 0) * 100)}%`],
           ["health", `${f.hp} / ${f.maxHp}`],
         ];
+      } else if (selected.type === "wagon") {
+        titleEl.textContent = "Supply Wagon";
+        lines = [
+          ["role", "drop goods here"],
+          ["wood stored", String(state.stores.wood)],
+        ];
+      } else if (selected.type === "fire") {
+        titleEl.textContent = "Campfire";
+        lines = [
+          ["status", "the heart of camp"],
+          ["light", "burns through the night"],
+        ];
       } else if (selected.type === "flora") {
         const item = state.flora[selected.id];
         if (!item || item.state === "gone") {

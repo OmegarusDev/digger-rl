@@ -136,6 +136,9 @@ export function canPlace(state, kindId, wx, wy) {
   if (state.buildingMap.has(cellKey(cx, cy))) return { ok: false, reason: "Occupied" };
   const items = floraAtCell(state, cx, cy);
   if (items.some((f) => f.state === "alive")) return { ok: false, reason: "Clear the flora first" };
+  const c = state.camp;
+  if (Math.hypot(wx - (c.x + 1.65), wy - (c.y + 0.1)) < 1.3) return { ok: false, reason: "Too close to the supply wagon" };
+  if (Math.hypot(wx - (c.x - 0.4), wy - (c.y + 1.05)) < 1.2) return { ok: false, reason: "Too close to the campfire" };
   for (const [good, cost] of Object.entries(def.cost)) {
     if ((state.stores[good] ?? 0) < cost) return { ok: false, reason: `Need ${cost} ${good}` };
   }
