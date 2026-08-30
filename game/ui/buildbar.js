@@ -11,6 +11,7 @@ export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
     btn.title = def.desc;
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
+      btn.blur();
       const active = btn.classList.contains("active");
       setActive(null);
       if (!active) {

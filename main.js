@@ -7,6 +7,7 @@ import { makePalette } from "./forge/palette.js";
 import { createSim } from "./game/sim/sim.js";
 import { findFloraNear, findBuildingNear, carryTotal } from "./game/sim/founder.js";
 import { canPlace, placeBuilding } from "./game/sim/state.js";
+import { WORK_RANGE } from "./game/sim/founder.js";
 import { BUILDINGS } from "./game/data/buildings.js";
 import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
@@ -58,6 +59,7 @@ sim.state.bus.on("built", (e) => {
 sim.state.bus.on("saw", (e) => fx.emit("chips", e.x + 0.25, e.y - 0.35, { count: 3 }));
 sim.state.bus.on("pickHit", (e) => fx.emit("leafPuff", e.x, e.y, { count: 3, color: "#b8452f" }));
 sim.state.bus.on("mineHit", (e) => fx.emit("spark", e.x, e.y - 0.25, { count: 4, color: "#c8c2b4" }));
+sim.state.bus.on("handsFull", (e) => fx.float(e.x, e.y - 0.6, "hands full", "#e9dfc6"));
 
 const input = new Input(canvas);
 const hud = createHud(document.getElementById("ui"));
@@ -114,10 +116,12 @@ function frame(dt) {
     else if (k === "KeyB") {
       placing = placing === "hut" ? null : "hut";
       buildbar.setActive(placing);
+      cam._anchor = null;
       if (placing === "hut") hud.toast("Woodcutter's Hut — click a clear tile, right-click to cancel");
     } else if (k === "KeyV") {
       placing = placing === "store" ? null : "store";
       buildbar.setActive(placing);
+      cam._anchor = null;
       if (placing === "store") hud.toast("Storehouse — click a clear tile, right-click to cancel");
     } else if (k === "KeyF") {
       follow = !follow;
@@ -184,12 +188,18 @@ function frame(dt) {
     } else {
       const hit = findFloraNear(sim.state, w.x, w.y, 0.9);
       const hitB = findBuildingNear(sim.state, w.x, w.y, 0.55);
-      if (hit) {
-        f.workLatch = false;
-        f.workTarget = { type: "flora", id: hit.id };
-      } else if (hitB) {
-        f.workLatch = false;
-        f.workTarget = { type: "building", id: hitB.id, x: hitB.x, y: hitB.y };
+      const target = hit
+        ? { wt: { type: "flora", id: hit.id }, d: Math.hypot(hit.x - f.x, hit.y - f.y) }
+        : hitB
+          ? { wt: { type: "building", id: hitB.id, x: hitB.x, y: hitB.y }, d: Math.hypot(hitB.x - f.x, hitB.y - f.y) }
+          : null;
+      if (target) {
+        if (target.d <= WORK_RANGE + 0.15) {
+          f.workLatch = false;
+          f.workTarget = target.wt;
+        } else {
+          hud.toast("Out of reach — walk closer");
+        }
       }
     }
   }

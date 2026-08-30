@@ -197,6 +197,13 @@ export class WorldCamera {
   }
 
   tick(dt) {
+    if (!Number.isFinite(this.x + this.y + this.zoom + this.targetX + this.targetY + this.targetZoom)) {
+      this.x = this.targetX = this.world ? Math.max(this.world.minX + 4, this.world.maxX - 4) : 0;
+      this.y = this.targetY = this.world ? Math.max(this.world.minY + 4, this.world.maxY - 4) : 0;
+      this.zoom = this.targetZoom = 1;
+      this._anchor = null;
+      this._deriv = null;
+    }
     const followT = 1 - Math.pow(1 - 0.14, dt * 60);
     const zoomT = 1 - Math.pow(1 - 0.1, dt * 60);
     this.x = lerp(this.x, this.targetX, followT);

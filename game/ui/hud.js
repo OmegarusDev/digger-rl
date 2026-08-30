@@ -17,7 +17,7 @@ export function createHud(root) {
     </div>
     <div class="hud-paused" id="hudPaused">PAUSED — P</div>
     <div class="hud-toast" id="hudToast"></div>
-    <div class="hud-hint"><b>WASD</b> move · <b>SPACE</b> work nearest · <b>click</b> work a thing · <b>B/V</b> build · wheel zoom · drag free-cam · <b>1/2/3</b> speed · <b>P</b> pause</div>
+    <div class="hud-hint"><b>WASD</b> move · <b>SPACE</b> work what's in reach · <b>click</b> work a thing · <b>B/V</b> build · wheel zoom · drag free-cam · <b>1/2/3</b> speed · <b>P</b> pause</div>
   `;
 
   const el = (id) => root.querySelector("#" + id);
