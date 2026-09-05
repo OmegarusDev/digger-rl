@@ -1,5 +1,5 @@
 import { carryUnits } from "../../data/goods.js";
-import { walkTask, swingTask, buildingWorkSpot, depositIntoBuilding, claimFlora } from "./common.js";
+import { walkTask, swingTask, buildingWorkSpot, depositIntoBuilding } from "./common.js";
 import { nearestFieldTask, claimField, fieldSwingHit, harvestYield, fieldAction } from "../fields.js";
 
 export function scan(state, v, b) {

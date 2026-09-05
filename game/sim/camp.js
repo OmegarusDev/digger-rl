@@ -1,7 +1,27 @@
 import { createVillager } from "./villager.js";
 import { isWalkable, nearestWalkable } from "./grid.js";
+import { GOODS } from "../data/goods.js";
 
 export const CALL_CHANCE = 0.75;
+
+export const BONFIRE_UPGRADES = [
+  null,
+  { cost: { log: 10 }, label: "Hearths and benches" },
+  { cost: { log: 10, stoneBlock: 4 }, label: "The meeting stone" },
+];
+
+export function bonfireUpgrade(state) {
+  const bf = state.bonfire;
+  if (bf.workersLevel >= BONFIRE_UPGRADES.length - 1) return { ok: false, reason: "The bonfire burns as bright as it can" };
+  const up = BONFIRE_UPGRADES[bf.workersLevel + 1];
+  for (const [good, cost] of Object.entries(up.cost)) {
+    if ((state.stores[good] ?? 0) < cost) return { ok: false, reason: `Need ${cost} ${GOODS[good].name}` };
+  }
+  for (const [good, cost] of Object.entries(up.cost)) state.stores[good] -= cost;
+  bf.workersLevel += 1;
+  state.bus.emit("bonfire", { x: state.camp.x, y: state.camp.y, level: bf.workersLevel });
+  return { ok: true, reason: "" };
+}
 
 export function callVillager(state) {
   const bf = state.bonfire;

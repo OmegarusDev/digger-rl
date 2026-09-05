@@ -22,7 +22,7 @@ import { createHud } from "./game/ui/hud.js";
 import { createBuildBar } from "./game/ui/buildbar.js";
 import { createInfoPanel } from "./game/ui/panel.js";
 import { createSplash } from "./game/ui/splash.js";
-import { callVillager } from "./game/sim/camp.js";
+import { callVillager, bonfireUpgrade } from "./game/sim/camp.js";
 import { buildBed } from "./game/sim/homes.js";
 
 const params = new URLSearchParams(location.search);
@@ -83,6 +83,7 @@ sim.state.bus.on("died", (e) => {
   fx.emit("pop", e.x, e.y, {});
 });
 sim.state.bus.on("joined", (e) => hud.toast(`${e.name} has joined the camp`));
+sim.state.bus.on("bonfire", (e) => fx.emit("pop", e.x, e.y, {}));
 
 const input = new Input(canvas);
 const hud = createHud(document.getElementById("ui"));
@@ -90,6 +91,9 @@ const panel = createInfoPanel(document.getElementById("ui"), (act, arg) => {
   if (act === "callVillager") {
     const r = callVillager(sim.state);
     hud.toast(r.reason);
+  } else if (act === "upgradeBonfire") {
+    const r = bonfireUpgrade(sim.state);
+    hud.toast(r.ok ? "The camp gathers closer — more hands at every worksite" : r.reason);
   } else if (act === "buildBed") {
     const b = sim.state.buildings.find((bb) => bb.id === Number(arg));
     if (b) {

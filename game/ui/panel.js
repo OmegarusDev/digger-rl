@@ -5,6 +5,7 @@ import { slotCap } from "../sim/jobs.js";
 import { usedBeds } from "../sim/homes.js";
 import { BUILDINGS } from "../data/buildings.js";
 import { storageCount, capOf } from "../sim/storage.js";
+import { BONFIRE_UPGRADES } from "../sim/camp.js";
 import { CROPS } from "../data/crops.js";
 import { fieldStatusLabel } from "../sim/fields.js";
 
@@ -124,11 +125,19 @@ export function createInfoPanel(root, onAction) {
       } else if (selected.type === "fire") {
         title = "Campfire";
         const bf = state.bonfire;
-        lines = [["status", "the heart of camp"], ["souls", String(1 + state.villagers.length)]];
+        lines = [
+          ["status", "the heart of camp"],
+          ["souls", String(1 + state.villagers.length)],
+          ["worksites", `+${bf.workersLevel} hands per trade`],
+        ];
         if (bf.pending) lines.push(["called", `arriving day ${bf.pending.arriveDay}`]);
         else if (bf.callDay === state.time.day) lines.push(["called", "again tomorrow"]);
         if (!bf.pending && bf.callDay !== state.time.day) {
           acts.push({ act: "callVillager", label: "Call Villager" });
+        }
+        const nextUp = BONFIRE_UPGRADES[bf.workersLevel + 1];
+        if (nextUp) {
+          acts.push({ act: "upgradeBonfire", label: `${nextUp.label} — ${costLabel(nextUp.cost)}` });
         }
       } else if (selected.type === "field") {
         const field = (state.fields ?? []).find((ff) => ff.id === selected.id);
