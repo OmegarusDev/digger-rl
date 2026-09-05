@@ -56,18 +56,17 @@ export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
     cards[kindId] = card;
     menu.appendChild(card);
   }
-  menu.style.display = "none";
   root.appendChild(menu);
   root.appendChild(fab);
 
   let open = false;
   function openMenu() {
     open = true;
-    menu.style.display = "flex";
+    menu.classList.add("open");
   }
   function closeMenu() {
     open = false;
-    menu.style.display = "none";
+    menu.classList.remove("open");
   }
 
   fab.addEventListener("click", (e) => {

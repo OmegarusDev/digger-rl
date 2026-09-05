@@ -91,6 +91,7 @@ const hud = createHud(document.getElementById("ui"), {
     follow = !follow;
     hud.toast(follow ? "Following the founder" : "Free camera — press F to follow again");
   },
+  onSpeedCycle: () => setSpeed(speedIdx + 1),
 });
 const panel = createInfoPanel(document.getElementById("ui"), (act, arg) => {
   if (act === "callVillager") {
@@ -177,6 +178,14 @@ const loop = new GameLoop({
   render: (dt) => frame(dt),
 });
 
+const SPEEDS = [1, 2, 4];
+let speedIdx = 0;
+function setSpeed(i) {
+  speedIdx = ((i % SPEEDS.length) + SPEEDS.length) % SPEEDS.length;
+  loop.speed = SPEEDS[speedIdx];
+  hud.setSpeed(loop.speed);
+}
+
 function frame(dt) {
   try {
     frameInner(dt);
@@ -200,9 +209,9 @@ function frameInner(dt) {
     if (k === "KeyP") {
       loop.paused = !loop.paused;
       hud.setPaused(loop.paused);
-    } else if (k === "Digit1") loop.speed = 1;
-    else if (k === "Digit2") loop.speed = 2;
-    else if (k === "Digit3") loop.speed = 4;
+    }     else if (k === "Digit1") setSpeed(0);
+    else if (k === "Digit2") setSpeed(1);
+    else if (k === "Digit3") setSpeed(2);
     else if (k === "KeyB") {
       placing = placing === "hut" ? null : "hut";
       buildbar.setActive(placing);
@@ -333,7 +342,8 @@ function frameInner(dt) {
   if (follow && !(placing && input.dragging)) cam.follow(f.x, f.y);
   cam.tick(dt);
   cam.clear(ctx, "#0f130a");
-  renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost, ghostField });
+  renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost, ghostField, selected });
+  canvas.classList.toggle("placing", !!placing);
   buildbar.refresh(sim.state.stores);
   panel.update(sim.state, selected, f);
   hud.update(sim.state, f, follow);

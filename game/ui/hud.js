@@ -18,6 +18,8 @@ export function createHud(root, opts = {}) {
       <span class="store">souls <span class="n" id="hudPop">1</span></span>
       <span class="sep"></span>
       <button class="cam-chip" id="hudCam" title="Camera: follow / free (F)">◎ follow</button>
+      <span class="sep"></span>
+      <button class="cam-chip speed-chip" id="hudSpeed" title="Game speed — 1/2/3">×1</button>
     </div>
     <div class="hud-paused" id="hudPaused">PAUSED — P</div>
     <div class="hud-toast" id="hudToast"></div>
@@ -34,12 +36,18 @@ export function createHud(root, opts = {}) {
   const carryEl = el("hudCarry");
   const popEl = el("hudPop");
   const camEl = el("hudCam");
+  const speedEl = el("hudSpeed");
   const pausedEl = el("hudPaused");
   const toastEl = el("hudToast");
 
   camEl.addEventListener("click", (e) => {
     e.stopPropagation();
     opts.onCamToggle?.();
+  });
+
+  speedEl.addEventListener("click", (e) => {
+    e.stopPropagation();
+    opts.onSpeedCycle?.();
   });
 
   function icon(id, paint) {
@@ -106,6 +114,7 @@ export function createHud(root, opts = {}) {
       setText(clockEl, "clock", clockLabel(state.time.tod));
       setText(logEl, "log", String(state.stores.log));
       setText(foodEl, "food", String(state.stores.food));
+      foodEl.classList.toggle("zero", state.stores.food === 0);
       setText(lumberEl, "lumber", String(state.stores.lumber));
       setText(blockEl, "block", String(state.stores.stoneBlock));
       const tot = founder ? carryUnits(founder.carry) : 0;
@@ -120,6 +129,12 @@ export function createHud(root, opts = {}) {
     },
     setPaused(on) {
       pausedEl.classList.toggle("on", on);
+    },
+    setSpeed(n) {
+      const label = `×${n}`;
+      if (last.speed === label) return;
+      last.speed = label;
+      speedEl.textContent = label;
     },
     toast(msg) {
       toastEl.textContent = msg;
