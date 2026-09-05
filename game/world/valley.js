@@ -165,7 +165,27 @@ export function createValley(seed) {
         }
       }
     }
+    placeDeposit(out);
     return out;
+  }
+
+  function placeDeposit(out) {
+    const cx = camp.x + 0.5;
+    const cy = camp.y + 0.5;
+    let placed = 0;
+    for (let i = 0; i < 10 && placed < 4; i++) {
+      const ang = (i / 10) * Math.PI * 2 + 0.6;
+      for (let d = 4.6; d <= 8.5; d += 0.4) {
+        const x = cx + Math.cos(ang) * d;
+        const y = cy + Math.sin(ang) * d;
+        const t = typeAt(x, y);
+        if (t === "water" || t === "shore") continue;
+        if (out.some((f) => Math.hypot(f.x - x, f.y - y) < 1)) break;
+        out.push({ kind: "rock", x, y, variant: placed % 3, scale: 1.5 + (placed % 2) * 0.3, hp: 24 });
+        placed++;
+        break;
+      }
+    }
   }
 
   return {

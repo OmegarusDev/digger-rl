@@ -10,6 +10,8 @@ import { canPlace, placeBuilding } from "./game/sim/state.js";
 import { WORK_RANGE } from "./game/sim/founder.js";
 import { inspectableAt } from "./game/sim/inspect.js";
 import { unassign } from "./game/sim/jobs.js";
+import { expandStorage } from "./game/sim/storage.js";
+import { GOODS } from "./game/data/goods.js";
 import { BUILDINGS } from "./game/data/buildings.js";
 import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
@@ -66,6 +68,9 @@ sim.state.bus.on("saw", (e) => fx.emit("chips", e.x + 0.25, e.y - 0.35, { count:
 sim.state.bus.on("pickHit", (e) => fx.emit("leafPuff", e.x, e.y, { count: 3, color: "#b8452f" }));
 sim.state.bus.on("mineHit", (e) => fx.emit("spark", e.x, e.y - 0.25, { count: 4, color: "#c8c2b4" }));
 sim.state.bus.on("handsFull", (e) => fx.float(e.x, e.y - 0.6, "hands full", "#e9dfc6"));
+sim.state.bus.on("hunt", (e) => fx.emit("pop", e.x, e.y, { color: "#8a3a2a" }));
+sim.state.bus.on("trapSet", (e) => fx.emit("dust", e.x, e.y, { count: 4 }));
+sim.state.bus.on("refined", (e) => fx.float(e.x, e.y - 0.6, `+${e.n} ${GOODS[e.good].name}`, "#e9dfc6"));
 sim.state.bus.on("died", (e) => {
   hud.toast(`${e.name} has died`);
   fx.emit("pop", e.x, e.y, {});
@@ -83,6 +88,12 @@ const panel = createInfoPanel(document.getElementById("ui"), (act, arg) => {
     if (b) {
       const r = buildBed(sim.state, b);
       hud.toast(r.ok ? `Bed built — ${b.beds} in the house` : r.reason);
+    }
+  } else if (act === "expandStorage") {
+    const b = sim.state.buildings.find((bb) => bb.id === Number(arg));
+    if (b) {
+      const r = expandStorage(sim.state, b);
+      hud.toast(r.ok ? `Storage expanded to level ${b.storageLvl}` : r.reason);
     }
   } else if (act === "unassign") {
     const [bId, vId] = arg.split(":").map(Number);

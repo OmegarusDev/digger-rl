@@ -4,6 +4,7 @@ import { hungerState, professionLabel } from "../sim/villager.js";
 import { slotCap } from "../sim/jobs.js";
 import { usedBeds } from "../sim/homes.js";
 import { BUILDINGS } from "../data/buildings.js";
+import { storageCount, capOf } from "../sim/storage.js";
 
 export function createInfoPanel(root, onAction) {
   const el = document.createElement("div");
@@ -174,10 +175,6 @@ export function createInfoPanel(root, onAction) {
           title = `${b.name} — Site`;
           lines = [["builders", "work here to raise it"]];
           barFrac = b.work / b.maxWork;
-        } else if (b.kind === "hut") {
-          title = b.name;
-          lines = [["status", "built"], ["use", "saws logs on its own"]];
-          workerRows(state, b, lines, acts);
         } else if (b.kind === "house") {
           title = b.name;
           const used = usedBeds(state, b);
@@ -190,7 +187,19 @@ export function createInfoPanel(root, onAction) {
           if (b.beds < cap) acts.push({ act: "buildBed", arg: String(b.id), label: `Build Bed — ${bedCostLabel()}` });
         } else {
           title = b.name;
-          lines = [["status", "built"], ["use", "drop goods here"]];
+          const def = BUILDINGS[b.kind];
+          lines = [["status", "built"]];
+          if (def.storage && b.storage) {
+            for (const good of Object.keys(def.storage)) {
+              lines.push([GOODS[good].name.toLowerCase(), `${storageCount(b, good)} / ${capOf(b, good)}`]);
+            }
+          }
+          if (def.recipe) lines.push(["makes", recipeLabel(def.recipe)]);
+          if (def.slots) workerRows(state, b, lines, acts);
+          const up = def.storageUpgrade;
+          if (up && b.storageLvl < up.max) {
+            acts.push({ act: "expandStorage", arg: String(b.id), label: `Expand Storage — ${costLabel(up.cost)}` });
+          }
         }
       }
 
@@ -215,7 +224,19 @@ function workerRows(state, b, lines, acts) {
 }
 
 function bedCostLabel() {
-  return Object.entries(BUILDINGS.house.bedCost)
+  return costLabel(BUILDINGS.house.bedCost);
+}
+
+function costLabel(cost) {
+  return Object.entries(cost)
     .map(([gg, c]) => `${c} ${GOODS[gg].name}`)
     .join(" · ");
+}
+
+function recipeLabel(recipe) {
+  const side = (m) =>
+    Object.entries(m)
+      .map(([gg, c]) => `${c} ${GOODS[gg].name.toLowerCase()}`)
+      .join(" + ");
+  return `${side(recipe.in)} → ${side(recipe.out)}`;
 }

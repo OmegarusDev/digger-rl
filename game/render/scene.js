@@ -2,6 +2,7 @@ import { drawFlora } from "./flora.js";
 import { drawBuilding, drawGhost } from "./buildings.js";
 import { drawFounder, drawCamp, drawFireGlow } from "./camp.js";
 import { drawVillager } from "./villager.js";
+import { drawDeer, drawTrap } from "./fauna.js";
 import { WORK_RANGE } from "../sim/founder.js";
 import { withAlpha } from "../../forge/draw.js";
 import { sunState } from "../../forge/sun.js";
@@ -21,6 +22,14 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
     if (item.x < b.left - 3 || item.x > b.right + 3 || item.y < b.top - 4 || item.y > b.bottom + 4) continue;
     drawList.push({ y: item.y, item });
   }
+  for (const deer of state.fauna.deer) {
+    if (deer.x < b.left - 3 || deer.x > b.right + 3 || deer.y < b.top - 4 || deer.y > b.bottom + 4) continue;
+    drawList.push({ y: deer.y, deer });
+  }
+  for (const trap of state.fauna.traps) {
+    if (trap.x < b.left - 3 || trap.x > b.right + 3 || trap.y < b.top - 4 || trap.y > b.bottom + 4) continue;
+    drawTrap(ctx, cam, P, trap, trap.caught);
+  }
   for (const bd of state.buildings) {
     if (bd.x < b.left - 3 || bd.x > b.right + 3 || bd.y < b.top - 4 || bd.y > b.bottom + 4) continue;
     drawList.push({ y: bd.y, bd });
@@ -34,6 +43,7 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
   for (const e of drawList) {
     if (e.founder) drawFounder(ctx, cam, P, state.founder, sun);
     else if (e.villager) drawVillager(ctx, cam, P, e.villager, sun);
+    else if (e.deer) drawDeer(ctx, cam, P, e.deer, sun);
     else if (e.bd) drawBuilding(ctx, cam, P, e.bd, opts.hoverBuilding?.id === e.bd.id, sun);
     else drawFlora(ctx, cam, P, e.item, t, sun);
   }

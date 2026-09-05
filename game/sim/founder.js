@@ -3,7 +3,9 @@ import { makeMover, walkCmd } from "./mover.js";
 import { nearestWalkable } from "./grid.js";
 import { mulberry32 } from "../../forge/rng.js";
 import { FLORA_YIELD, carryUnits } from "../data/goods.js";
+import { BUILDINGS } from "../data/buildings.js";
 import { depositCarry } from "./haul.js";
+import { hasInputs, outputRoom, consumeInputs, produceOutputs, takeFromBuilding, storageCount } from "./storage.js";
 
 const NAMES = ["Rowan", "Aldwin", "Bram", "Cedric", "Dunstan", "Edric", "Godric", "Wystan"];
 export const WORK_RANGE = 1.45;
@@ -12,6 +14,12 @@ const DEPOSIT_RANGE = 1.7;
 
 export function carryTotal(f) {
   return carryUnits(f.carry);
+}
+
+function founderCanWork(b) {
+  if (b.state === "site") return true;
+  if (b.kind === "hut") return true;
+  return Boolean(BUILDINGS[b.kind]?.recipe);
 }
 
 export function createFounder(state) {
@@ -45,7 +53,7 @@ function resolveTarget(state, wt) {
   if (wt.type === "building") {
     const b = buildingAtCell(state, Math.floor(wt.x), Math.floor(wt.y));
     if (!b || b.id !== wt.id) return null;
-    return b.state === "built" && b.kind !== "hut" ? null : b;
+    return b.state === "built" && !founderCanWork(b) ? null : b;
   }
   return null;
 }
@@ -165,7 +173,11 @@ function doWork(state, dt, wt, t) {
       f.action = null;
       if (f.workLatch) acquireWork(state, f, REACH);
     }
-  } else if (b.kind === "hut") {
+    return;
+  }
+
+  const def = BUILDINGS[b.kind];
+  if (b.kind === "hut") {
     const room = f.carryMax - carryTotal(f);
     if (room <= 0) {
       handsFull(state, f);
@@ -174,6 +186,30 @@ function doWork(state, dt, wt, t) {
     const add = Math.min(1, room);
     f.carry.log += add;
     state.bus.emit("saw", { x: b.x, y: b.y, n: add });
+    return;
+  }
+
+  if (def?.recipe) {
+    const rec = def.recipe;
+    if (hasInputs(b, rec) && outputRoom(b, rec)) {
+      b.refineProgress = (b.refineProgress ?? 0) + 1;
+      if (b.refineProgress >= rec.swings) {
+        b.refineProgress = 0;
+        consumeInputs(state, b, rec);
+        produceOutputs(state, b, rec);
+        state.bus.emit("saw", { x: b.x, y: b.y, n: 1 });
+      }
+      return;
+    }
+    const outGood = Object.keys(rec.out)[0];
+    const room = f.carryMax - carryTotal(f);
+    if (storageCount(b, outGood) > 0 && room > 0) {
+      const took = takeFromBuilding(state, b, outGood, Math.min(4, room));
+      if (took > 0) {
+        f.carry[outGood] = (f.carry[outGood] ?? 0) + took;
+        state.bus.emit("gather", { x: b.x, y: b.y, good: outGood, n: took });
+      }
+    }
   }
 }
 
@@ -202,8 +238,7 @@ function acquireWork(state, f, range) {
       }
       const b = buildingAtCell(state, cx + dx, cy + dy);
       if (b) {
-        const workable = b.state === "site" || (b.state === "built" && b.kind === "hut");
-        if (workable) {
+        if (founderCanWork(b)) {
           const d = Math.hypot(b.x - f.x, b.y - f.y);
           if (d <= range && (!best || d < best.d)) best = { wt: { type: "building", id: b.id, x: b.x, y: b.y }, d };
         }
@@ -243,7 +278,7 @@ export function findFloraNear(state, wx, wy, tol) {
 export function findBuildingNear(state, wx, wy, tol) {
   let best = null;
   for (const b of state.buildings) {
-    const workable = b.state === "site" || (b.state === "built" && b.kind === "hut");
+    const workable = founderCanWork(b);
     if (!workable) continue;
     const d = Math.hypot(b.x - wx, b.y - wy);
     if (d <= tol + 0.45 && (!best || d < best.d)) best = b;

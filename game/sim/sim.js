@@ -4,6 +4,7 @@ import { advanceTime } from "./time.js";
 import { updateVillager } from "./villager.js";
 import { vacancyTick } from "./jobs.js";
 import { updateArrivals, spawnStartingVillagers } from "./camp.js";
+import { updateFauna } from "./fauna.js";
 
 export const TICK_HZ = 30;
 
@@ -17,6 +18,7 @@ export function createSim(seed) {
   function tick(dt) {
     advanceTime(state, dt);
     updateFlora(state, dt);
+    updateFauna(state, dt);
     updateArrivals(state);
     for (let i = state.villagers.length - 1; i >= 0; i--) updateVillager(state, state.villagers[i], dt);
     vacancyT -= dt;

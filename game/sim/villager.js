@@ -1,9 +1,11 @@
 import { darkness } from "./time.js";
 import { makeMover, steerTo } from "./mover.js";
 import { PROFESSIONS, pickName } from "../data/villagers.js";
+import { carryUnits } from "../data/goods.js";
 import { claimBed } from "./homes.js";
 import { workTick } from "./tasks.js";
 import { nearestWalkable } from "./grid.js";
+import { nearestDeposit, depositCarry } from "./haul.js";
 
 export const VILLAGER_SPEED = 2.1;
 const WORK_SWING_RATE = 1.4;
@@ -24,6 +26,7 @@ export function createVillager(state, kind, x, y) {
     hp: 100,
     state: "idle",
     carry: {},
+    carryMax: 6,
     swing: 0,
     action: null,
     wanderT: 0,
@@ -106,6 +109,13 @@ function toBedTick(state, v, dt) {
 }
 
 function duskSleep(state, v, dt) {
+  if (carryUnits(v.carry) > 0) {
+    const pt = nearestDeposit(state, v.x, v.y);
+    if (!pt) return;
+    if (!steerTo(state, v, pt.x, pt.y + 0.55, dt, 0.8)) return;
+    depositCarry(state, v);
+    return;
+  }
   if (!v.home) claimBed(state, v);
   if (v.home) {
     v.state = "toBed";

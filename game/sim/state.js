@@ -9,6 +9,11 @@ const TREE_HP = 5;
 const ROCK_HP = 8;
 const BERRY_HP = 2;
 
+function floraHp(f) {
+  if (f.hp != null) return f.hp;
+  return f.kind === "tree" ? TREE_HP : f.kind === "rock" ? ROCK_HP : BERRY_HP;
+}
+
 export function createState(seed) {
   const valley = createValley(seed);
   const rng = mulberry32((seed ^ 0x51ab3f) | 0);
@@ -20,8 +25,8 @@ export function createState(seed) {
     species: f.species || null,
     variant: f.variant || 0,
     scale: f.scale || 1,
-    hp: f.kind === "tree" ? TREE_HP : f.kind === "rock" ? ROCK_HP : BERRY_HP,
-    maxHp: f.kind === "tree" ? TREE_HP : f.kind === "rock" ? ROCK_HP : BERRY_HP,
+    hp: floraHp(f),
+    maxHp: floraHp(f),
     state: "alive",
     fallT: 0,
     shakeT: 0,
@@ -43,6 +48,7 @@ export function createState(seed) {
     bonfire: { callDay: -1, pending: null, workersLevel: 0 },
     nextVillagerId: 1,
     stores: { food: 0, log: 0, lumber: 0, rawStone: 0, stoneBlock: 0 },
+    fauna: { deer: [], traps: [], nextId: 1, cap: 0, respawnT: 0 },
     camp: valley.camp,
     time: { t: 0.3 * DAY_LEN, day: 1, season: 0, tod: 0.3 },
     tick: 0,
@@ -164,6 +170,8 @@ export function placeBuilding(state, kindId, wx, wy) {
     maxWork: def.work,
     workers: def.slots ? [] : null,
     beds: def.bedsCap ? 0 : null,
+    storage: def.storage ? {} : null,
+    storageLvl: def.storageUpgrade ? 0 : null,
   };
   state.buildings.push(b);
   state.buildingMap.set(cellKey(Math.floor(b.x), Math.floor(b.y)), b.id);
