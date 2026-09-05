@@ -1,16 +1,29 @@
 import { createState } from "./state.js";
 import { createFounder, updateFounder } from "./founder.js";
 import { advanceTime } from "./time.js";
+import { updateVillager } from "./villager.js";
+import { vacancyTick } from "./jobs.js";
+import { updateArrivals, spawnStartingVillagers } from "./camp.js";
 
 export const TICK_HZ = 30;
 
 export function createSim(seed) {
   const state = createState(seed);
   state.founder = createFounder(state);
+  spawnStartingVillagers(state);
+
+  let vacancyT = 0;
 
   function tick(dt) {
     advanceTime(state, dt);
     updateFlora(state, dt);
+    updateArrivals(state);
+    for (let i = state.villagers.length - 1; i >= 0; i--) updateVillager(state, state.villagers[i], dt);
+    vacancyT -= dt;
+    if (vacancyT <= 0) {
+      vacancyT = 1;
+      vacancyTick(state);
+    }
     updateFounder(state, dt);
     state.tick++;
   }

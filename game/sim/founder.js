@@ -1,8 +1,9 @@
 import { floraAtCell, fellTree, completeBuilding, depositPoints, buildingAtCell } from "./state.js";
-import { nearestWalkable, pathTo } from "./grid.js";
-import { steerAlong } from "../../forge/paths.js";
+import { makeMover, walkCmd } from "./mover.js";
+import { nearestWalkable } from "./grid.js";
 import { mulberry32 } from "../../forge/rng.js";
-import { FLORA_YIELD, CARRY_GOODS, DEPOSIT_AS, DEPOSIT_VALUE, carryUnits } from "../data/goods.js";
+import { FLORA_YIELD, carryUnits } from "../data/goods.js";
+import { depositCarry } from "./haul.js";
 
 const NAMES = ["Rowan", "Aldwin", "Bram", "Cedric", "Dunstan", "Edric", "Godric", "Wystan"];
 export const WORK_RANGE = 1.45;
@@ -17,16 +18,11 @@ export function createFounder(state) {
   const c = state.camp;
   const rng = mulberry32((state.seed ^ 0xfa11) | 0);
   const name = NAMES[Math.floor(rng() * NAMES.length)];
-  const spot = nearestWalkable(state, c.x + 0.5, c.y + 0.5, 4) ?? { x: c.x, y: c.y };
+  const spot = nearestWalkable(state, c.x + 0.5, c.y + 0.5, 4) ?? { x: Math.floor(c.x), y: Math.floor(c.y) };
   return {
     isFounder: true,
     name,
-    x: spot.x + 0.5,
-    y: spot.y + 0.5,
-    dir: Math.PI / 2,
-    speed: 2.6,
-    phase: 0,
-    moving: false,
+    ...makeMover(spot.x + 0.5, spot.y + 0.5, 2.6),
     action: null,
     swing: 0,
     swingRate: 1.5,
@@ -35,11 +31,8 @@ export function createFounder(state) {
     skills: { woodcraft: 0 },
     hp: 100,
     maxHp: 100,
-    cmd: { dx: 0, dy: 0 },
     workLatch: false,
     workTarget: null,
-    stuckT: 0,
-    detour: null,
   };
 }
 
@@ -71,43 +64,8 @@ export function updateFounder(state, dt) {
       f.action = null;
     }
     const len = Math.hypot(cmd.dx, cmd.dy) || 1;
-    const dirx = cmd.dx / len;
-    const diry = cmd.dy / len;
-    if (f.detour && dirx * f.detour.dx + diry * f.detour.dy < 0.5) f.detour = null;
-
-    if (f.detour) {
-      const bx = f.x;
-      const by = f.y;
-      const done = steerAlong(f, f.detour.path, f.speed, dt);
-      f.phase += dt * f.speed * 0.62;
-      f.moving = true;
-      const stepped = Math.hypot(f.x - bx, f.y - by);
-      if (done || stepped < f.speed * dt * 0.3) f.detour = null;
-      return;
-    }
-
-    const sp = f.speed * dt;
-    const bx = f.x;
-    const by = f.y;
-    tryMove(state, f, dirx * sp, diry * sp);
-    f.dir = Math.atan2(diry, dirx);
-    f.phase += dt * f.speed * 0.62;
-    f.moving = true;
-    f.action = null;
-    const stepped = Math.hypot(f.x - bx, f.y - by);
-    if (stepped < sp * 0.35) {
-      f.stuckT += dt;
-      if (f.stuckT > 0.3) {
-        f.stuckT = 0;
-        const tgt = detourTarget(state, f, dirx, diry);
-        if (tgt) {
-          const p = pathTo(state, f.x, f.y, tgt.x, tgt.y);
-          if (p && p.length > 1) f.detour = { path: p, wp: 0, dx: dirx, dy: diry };
-        }
-      }
-    } else {
-      f.stuckT = 0;
-    }
+    const inDetour = walkCmd(state, f, cmd.dx / len, cmd.dy / len, dt);
+    if (!inDetour) f.action = null;
     return;
   }
 
@@ -135,65 +93,10 @@ function autoDeposit(state, f) {
   if (carryTotal(f) <= 0) return;
   for (const pt of depositPoints(state)) {
     if (Math.hypot(f.x - pt.x, f.y - pt.y) < DEPOSIT_RANGE) {
-      let total = 0;
-      for (const good of CARRY_GOODS) {
-        const n = f.carry[good] ?? 0;
-        if (n > 0) {
-          const target = DEPOSIT_AS[good] ?? good;
-          state.stores[target] = (state.stores[target] ?? 0) + n * (DEPOSIT_VALUE[good] ?? 1);
-          total += n;
-          f.carry[good] = 0;
-        }
-      }
-      if (total > 0) state.bus.emit("deposit", { x: f.x, y: f.y, n: total });
+      depositCarry(state, f);
       return;
     }
   }
-}
-
-function tryMove(state, f, dx, dy) {
-  const n = state.size;
-  const nx = f.x + dx;
-  const ny = f.y + dy;
-  const walk = (cx, cy) => cx >= 0 && cy >= 0 && cx < n && cy < n && state.walk[cy * n + cx] === 1;
-  if (walk(Math.floor(nx), Math.floor(ny))) {
-    f.x = nx;
-    f.y = ny;
-  } else if (walk(Math.floor(nx), Math.floor(f.y))) {
-    f.x = nx;
-  } else if (walk(Math.floor(f.x), Math.floor(ny))) {
-    f.y = ny;
-  }
-}
-
-function detourTarget(state, f, dirx, diry) {
-  const cx = Math.floor(f.x);
-  const cy = Math.floor(f.y);
-  let best = null;
-  let bestScore = 0.25;
-  for (let r = 2; r <= 6; r++) {
-    for (let dy = -r; dy <= r; dy++) {
-      for (let dx = -r; dx <= r; dx++) {
-        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-        const cellx = cx + dx;
-        const celly = cy + dy;
-        if (!isWalkableCell(state, cellx, celly)) continue;
-        const len = Math.hypot(dx, dy) || 1;
-        const score = (dx / len) * dirx + (dy / len) * diry;
-        if (score > bestScore) {
-          bestScore = score;
-          best = { x: cellx + 0.5, y: celly + 0.5 };
-        }
-      }
-    }
-  }
-  return best;
-}
-
-function isWalkableCell(state, cx, cy) {
-  const n = state.size;
-  if (cx < 0 || cy < 0 || cx >= n || cy >= n) return false;
-  return state.walk[cy * n + cx] === 1;
 }
 
 function handsFull(state, f) {

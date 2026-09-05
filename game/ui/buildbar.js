@@ -121,6 +121,20 @@ function paintBuildingIcon(g, kind) {
     g.fillRect(19, 22, 6, 10);
     g.fillStyle = "#685032";
     g.fillRect(33, 8, 4, 9);
+  } else if (kind === "house") {
+    g.fillStyle = "#a88a5a";
+    g.fillRect(10, 17, 24, 15);
+    g.fillStyle = "#8a6a44";
+    g.beginPath();
+    g.moveTo(6, 18);
+    g.lineTo(22, 5);
+    g.lineTo(38, 18);
+    g.closePath();
+    g.fill();
+    g.fillStyle = "#5f4a2e";
+    g.fillRect(19, 22, 6, 10);
+    g.fillStyle = "#685032";
+    g.fillRect(30, 8, 4, 7);
   } else {
     g.fillStyle = "#8a6a44";
     g.fillRect(9, 26, 26, 6);

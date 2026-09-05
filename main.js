@@ -9,6 +9,7 @@ import { findFloraNear, findBuildingNear, carryTotal } from "./game/sim/founder.
 import { canPlace, placeBuilding } from "./game/sim/state.js";
 import { WORK_RANGE } from "./game/sim/founder.js";
 import { inspectableAt } from "./game/sim/inspect.js";
+import { unassign } from "./game/sim/jobs.js";
 import { BUILDINGS } from "./game/data/buildings.js";
 import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
@@ -16,6 +17,8 @@ import { createHud } from "./game/ui/hud.js";
 import { createBuildBar } from "./game/ui/buildbar.js";
 import { createInfoPanel } from "./game/ui/panel.js";
 import { createSplash } from "./game/ui/splash.js";
+import { callVillager } from "./game/sim/camp.js";
+import { buildBed } from "./game/sim/homes.js";
 
 const params = new URLSearchParams(location.search);
 const seedParam = Number(params.get("seed"));
@@ -63,10 +66,32 @@ sim.state.bus.on("saw", (e) => fx.emit("chips", e.x + 0.25, e.y - 0.35, { count:
 sim.state.bus.on("pickHit", (e) => fx.emit("leafPuff", e.x, e.y, { count: 3, color: "#b8452f" }));
 sim.state.bus.on("mineHit", (e) => fx.emit("spark", e.x, e.y - 0.25, { count: 4, color: "#c8c2b4" }));
 sim.state.bus.on("handsFull", (e) => fx.float(e.x, e.y - 0.6, "hands full", "#e9dfc6"));
+sim.state.bus.on("died", (e) => {
+  hud.toast(`${e.name} has died`);
+  fx.emit("pop", e.x, e.y, {});
+});
+sim.state.bus.on("joined", (e) => hud.toast(`${e.name} has joined the camp`));
 
 const input = new Input(canvas);
 const hud = createHud(document.getElementById("ui"));
-const panel = createInfoPanel(document.getElementById("ui"));
+const panel = createInfoPanel(document.getElementById("ui"), (act, arg) => {
+  if (act === "callVillager") {
+    const r = callVillager(sim.state);
+    hud.toast(r.reason);
+  } else if (act === "buildBed") {
+    const b = sim.state.buildings.find((bb) => bb.id === Number(arg));
+    if (b) {
+      const r = buildBed(sim.state, b);
+      hud.toast(r.ok ? `Bed built — ${b.beds} in the house` : r.reason);
+    }
+  } else if (act === "unassign") {
+    const [bId, vId] = arg.split(":").map(Number);
+    const b = sim.state.buildings.find((bb) => bb.id === bId);
+    const v = sim.state.villagers.find((vv) => vv.id === vId);
+    if (b && v) hud.toast(`${v.name} released from work`);
+    if (b) unassign(sim.state, b, vId);
+  }
+});
 
 let placing = null;
 let selected = null;

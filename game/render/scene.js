@@ -1,6 +1,7 @@
 import { drawFlora } from "./flora.js";
 import { drawBuilding, drawGhost } from "./buildings.js";
 import { drawFounder, drawCamp, drawFireGlow } from "./camp.js";
+import { drawVillager } from "./villager.js";
 import { WORK_RANGE } from "../sim/founder.js";
 import { withAlpha } from "../../forge/draw.js";
 import { sunState } from "../../forge/sun.js";
@@ -24,10 +25,15 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
     if (bd.x < b.left - 3 || bd.x > b.right + 3 || bd.y < b.top - 4 || bd.y > b.bottom + 4) continue;
     drawList.push({ y: bd.y, bd });
   }
+  for (const v of state.villagers) {
+    if (v.x < b.left - 3 || v.x > b.right + 3 || v.y < b.top - 4 || v.y > b.bottom + 4) continue;
+    drawList.push({ y: v.y, villager: v });
+  }
   drawList.push({ y: state.founder.y, founder: true });
   drawList.sort((a, c) => a.y - c.y);
   for (const e of drawList) {
     if (e.founder) drawFounder(ctx, cam, P, state.founder, sun);
+    else if (e.villager) drawVillager(ctx, cam, P, e.villager, sun);
     else if (e.bd) drawBuilding(ctx, cam, P, e.bd, opts.hoverBuilding?.id === e.bd.id, sun);
     else drawFlora(ctx, cam, P, e.item, t, sun);
   }

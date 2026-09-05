@@ -3,6 +3,9 @@ import { findFloraNear } from "./founder.js";
 export function inspectableAt(state, wx, wy) {
   const f = state.founder;
   if (f && Math.hypot(f.x - wx, f.y - wy) < 0.55) return { type: "founder" };
+  for (const v of state.villagers) {
+    if (Math.hypot(v.x - wx, v.y - wy) < 0.5) return { type: "villager", id: v.id };
+  }
   for (const b of state.buildings) {
     if (Math.hypot(b.x - wx, b.y - wy) < 0.6) return { type: "building", id: b.id };
   }

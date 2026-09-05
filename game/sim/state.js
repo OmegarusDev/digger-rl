@@ -40,6 +40,8 @@ export function createState(seed) {
     buildings: [],
     buildingMap: new Map(),
     nextBuildingId: 1,
+    bonfire: { callDay: -1, pending: null, workersLevel: 0 },
+    nextVillagerId: 1,
     stores: { food: 0, log: 0, lumber: 0, rawStone: 0, stoneBlock: 0 },
     camp: valley.camp,
     time: { t: 0.3 * DAY_LEN, day: 1, season: 0, tod: 0.3 },
@@ -160,6 +162,8 @@ export function placeBuilding(state, kindId, wx, wy) {
     state: "site",
     work: 0,
     maxWork: def.work,
+    workers: def.slots ? [] : null,
+    beds: def.bedsCap ? 0 : null,
   };
   state.buildings.push(b);
   state.buildingMap.set(cellKey(Math.floor(b.x), Math.floor(b.y)), b.id);

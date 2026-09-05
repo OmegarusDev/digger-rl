@@ -5,10 +5,24 @@ export const BUILDINGS = {
     cost: { log: 12 },
     work: 14,
     job: "sawyer",
+    slots: [1, 2, 2],
     visual: [
       ["box", { w: 0.78, d: 0.62, h: 0.4, top: "woodHi", side: "wood", dark: "woodDark" }],
       ["roof", { y: 0.4, w: 0.94, d: 0.78, h: 0.34, c: "roof", top: "roofDark", gable: "woodDark" }],
       ["box", { x: 0.26, y: 0.74, w: 0.08, d: 0.08, h: 0.14, top: "woodHi", side: "wood", dark: "woodDark" }],
+    ],
+  },
+  house: {
+    name: "House",
+    desc: "A roof and a hearth — beds keep villagers strong through the night",
+    cost: { log: 8, lumber: 2 },
+    work: 16,
+    bedsCap: 5,
+    bedCost: { log: 3 },
+    visual: [
+      ["box", { w: 0.84, d: 0.68, h: 0.46, top: "canvasHi", side: "canvas", dark: "canvasDark" }],
+      ["roof", { y: 0.46, w: 1.0, d: 0.84, h: 0.36, c: "roof", top: "roofDark", gable: "woodDark" }],
+      ["box", { x: 0, y: 0.36, w: 0.16, d: 0.05, h: 0.22, top: "woodHi", side: "woodDark", dark: "woodDark" }],
     ],
   },
   store: {
