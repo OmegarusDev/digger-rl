@@ -4,7 +4,7 @@ export function createSplash(root, { seed, onBegin }) {
   wrap.innerHTML = `
     <div class="title-card">
       <div class="title-brand">FORGE</div>
-      <h1 class="title-name">DIGGER&nbsp;RL</h1>
+      <h1 class="title-name">TRUE&nbsp;LEVELLERS</h1>
       <div class="title-sub">a medieval village roguelite</div>
       <div class="title-rule"></div>
       <form class="title-form" id="titleForm">

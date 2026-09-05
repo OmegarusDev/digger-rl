@@ -1,4 +1,4 @@
-# AGENTS.md — Digger RL
+# AGENTS.md — True Levellers
 
 ## Commands
 

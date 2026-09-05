@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://omegarusdev.github.io/digger-rl/" style="display:inline-block;padding:16px 52px;font:bold 26px sans-serif;color:#fff;background:#1f9d2f;border-radius:12px;text-decoration:none;">▶ PLAY DIGGER RL</a>
+  <a href="https://omegarusdev.github.io/digger-rl/" style="display:inline-block;padding:16px 52px;font:bold 26px sans-serif;color:#fff;background:#1f9d2f;border-radius:12px;text-decoration:none;">▶ PLAY TRUE LEVELLERS</a>
 </p>
 <p align="center">
   <a href="https://omegarusdev.github.io/digger-rl/">
@@ -8,7 +8,7 @@
 </p>
 <p align="center"><strong>No install.</strong> Works in the browser (desktop &amp; mobile).</p>
 
-# Digger RL
+# True Levellers
 
 A medieval village roguelite — be the Founder, work the commons, and hold the line when winter comes.
 
