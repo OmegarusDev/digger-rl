@@ -2,7 +2,7 @@ import { SEASONS } from "../sim/time.js";
 import { clockLabel } from "../sim/time.js";
 import { carryUnits } from "../data/goods.js";
 
-export function createHud(root) {
+export function createHud(root, opts = {}) {
   root.innerHTML = `
     <div class="hud-top">
       <span class="date" id="hudDate">Spring, Day 1</span>
@@ -16,10 +16,12 @@ export function createHud(root) {
       <span class="store">carry <span class="n" id="hudCarry">0/6</span></span>
       <span class="sep"></span>
       <span class="store">souls <span class="n" id="hudPop">1</span></span>
+      <span class="sep"></span>
+      <button class="cam-chip" id="hudCam" title="Camera: follow / free (F)">◎ follow</button>
     </div>
     <div class="hud-paused" id="hudPaused">PAUSED — P</div>
     <div class="hud-toast" id="hudToast"></div>
-    <div class="hud-hint"><b>WASD</b> move · <b>SPACE</b> work what's in reach · <b>click</b> work a thing · <b>B/V</b> build · wheel zoom · drag free-cam · <b>1/2/3</b> speed · <b>P</b> pause</div>
+    <div class="hud-hint"><b>WASD</b> move · <b>SPACE</b> work what's in reach · <b>click</b> work a thing · <b>B/V</b> build · <b>F</b> follow/free-cam · drag free-cam · wheel zoom · <b>1/2/3</b> speed · <b>P</b> pause</div>
   `;
 
   const el = (id) => root.querySelector("#" + id);
@@ -31,8 +33,14 @@ export function createHud(root) {
   const blockEl = el("hudBlock");
   const carryEl = el("hudCarry");
   const popEl = el("hudPop");
+  const camEl = el("hudCam");
   const pausedEl = el("hudPaused");
   const toastEl = el("hudToast");
+
+  camEl.addEventListener("click", (e) => {
+    e.stopPropagation();
+    opts.onCamToggle?.();
+  });
 
   function icon(id, paint) {
     const c = el(id);
@@ -93,7 +101,7 @@ export function createHud(root) {
   }
 
   return {
-    update(state, founder) {
+    update(state, founder, follow) {
       setText(dateEl, "date", `${SEASONS[state.time.season]}, Day ${state.time.day}`);
       setText(clockEl, "clock", clockLabel(state.time.tod));
       setText(logEl, "log", String(state.stores.log));
@@ -103,6 +111,12 @@ export function createHud(root) {
       const tot = founder ? carryUnits(founder.carry) : 0;
       setText(carryEl, "carry", `${tot}/${founder?.carryMax ?? 6}`);
       setText(popEl, "pop", String(1 + state.villagers.length));
+      const camLabel = follow ? "◎ follow" : "✥ free";
+      if (last.cam !== camLabel) {
+        last.cam = camLabel;
+        camEl.textContent = camLabel;
+        camEl.classList.toggle("free", !follow);
+      }
     },
     setPaused(on) {
       pausedEl.classList.toggle("on", on);

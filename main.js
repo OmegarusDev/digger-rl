@@ -86,7 +86,12 @@ sim.state.bus.on("joined", (e) => hud.toast(`${e.name} has joined the camp`));
 sim.state.bus.on("bonfire", (e) => fx.emit("pop", e.x, e.y, {}));
 
 const input = new Input(canvas);
-const hud = createHud(document.getElementById("ui"));
+const hud = createHud(document.getElementById("ui"), {
+  onCamToggle: () => {
+    follow = !follow;
+    hud.toast(follow ? "Following the founder" : "Free camera — press F to follow again");
+  },
+});
 const panel = createInfoPanel(document.getElementById("ui"), (act, arg) => {
   if (act === "callVillager") {
     const r = callVillager(sim.state);
@@ -203,18 +208,16 @@ function frameInner(dt) {
       buildbar.setActive(placing);
       if (placing) buildbar.open();
       else buildbar.close();
-      cam._anchor = null;
       if (placing === "hut") hud.toast("Woodcutter's Hut — click a clear tile, right-click to cancel");
     } else if (k === "KeyV") {
       placing = placing === "store" ? null : "store";
       buildbar.setActive(placing);
       if (placing) buildbar.open();
       else buildbar.close();
-      cam._anchor = null;
       if (placing === "store") hud.toast("Storehouse — click a clear tile, right-click to cancel");
     } else if (k === "KeyF") {
       follow = !follow;
-      hud.toast(follow ? "Following the founder" : "Free camera");
+      hud.toast(follow ? "Following the founder" : "Free camera — press F to follow again");
     } else if (k === "Space") {
       if (f.workLatch) {
         f.workLatch = false;
@@ -240,9 +243,9 @@ function frameInner(dt) {
     if (follow) cam.setZoom(z);
     else cam.zoomAt(io.zoom.x, io.zoom.y, z);
   }
-  if (io.drag.moved && placing !== "field") {
+  if (io.drag.moved) {
     cam.panBy(io.drag.dx, io.drag.dy);
-    if (follow && Math.abs(io.drag.dx) + Math.abs(io.drag.dy) > 3) follow = false;
+    if (follow && !placing && Math.abs(io.drag.dx) + Math.abs(io.drag.dy) > 3) follow = false;
   }
 
   let mdx = 0;
@@ -327,13 +330,13 @@ function frameInner(dt) {
     }
   }
 
-  if (follow) cam.follow(f.x, f.y);
+  if (follow && !(placing && input.dragging)) cam.follow(f.x, f.y);
   cam.tick(dt);
   cam.clear(ctx, "#0f130a");
   renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost, ghostField });
   buildbar.refresh(sim.state.stores);
   panel.update(sim.state, selected, f);
-  hud.update(sim.state, f);
+  hud.update(sim.state, f, follow);
 }
 
 function rectTiles(ax, ay, bx, by) {

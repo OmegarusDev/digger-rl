@@ -59,6 +59,19 @@ html, body {
 .hud-top .store { display: inline-flex; align-items: center; gap: 6px; }
 .hud-top .store .n { color: var(--accent); font-variant-numeric: tabular-nums; }
 .hud-top canvas { display: block; }
+.cam-chip {
+  font: inherit;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  color: var(--ink);
+  background: rgba(14, 12, 7, 0.85);
+  border: 1px solid rgba(216, 162, 74, 0.4);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.cam-chip:hover { border-color: var(--accent); color: var(--accent); }
+.cam-chip.free { color: var(--accent); border-color: var(--accent); }
 
 .hud-paused {
   position: absolute;
