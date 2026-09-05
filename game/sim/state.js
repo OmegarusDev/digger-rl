@@ -48,6 +48,8 @@ export function createState(seed) {
     bonfire: { callDay: -1, pending: null, workersLevel: 0 },
     nextVillagerId: 1,
     stores: { food: 0, log: 0, lumber: 0, rawStone: 0, stoneBlock: 0 },
+    fields: [],
+    nextFieldId: 1,
     fauna: { deer: [], traps: [], nextId: 1, cap: 0, respawnT: 0 },
     camp: valley.camp,
     time: { t: 0.3 * DAY_LEN, day: 1, season: 0, tod: 0.3 },

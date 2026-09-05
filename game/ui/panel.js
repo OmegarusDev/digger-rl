@@ -5,6 +5,8 @@ import { slotCap } from "../sim/jobs.js";
 import { usedBeds } from "../sim/homes.js";
 import { BUILDINGS } from "../data/buildings.js";
 import { storageCount, capOf } from "../sim/storage.js";
+import { CROPS } from "../data/crops.js";
+import { fieldStatusLabel } from "../sim/fields.js";
 
 export function createInfoPanel(root, onAction) {
   const el = document.createElement("div");
@@ -127,6 +129,31 @@ export function createInfoPanel(root, onAction) {
         else if (bf.callDay === state.time.day) lines.push(["called", "again tomorrow"]);
         if (!bf.pending && bf.callDay !== state.time.day) {
           acts.push({ act: "callVillager", label: "Call Villager" });
+        }
+      } else if (selected.type === "field") {
+        const field = (state.fields ?? []).find((ff) => ff.id === selected.id);
+        if (!field) {
+          hide();
+          return;
+        }
+        title = field.seed ? `Field — ${CROPS[field.seed].name}` : "Field";
+        lines = [
+          ["crop", fieldStatusLabel(field)],
+          ["tiles", `${field.tiles.length}`],
+          ["soil", field.watered > 0 ? "watered" : "dry"],
+        ];
+        if (field.seed && field.stage >= 0 && field.stage <= 2 && field.queuedSeed) {
+          lines.push(["next", CROPS[field.queuedSeed].name]);
+        }
+        const seeds = Object.keys(CROPS);
+        if (!field.seed || field.stage === -1) {
+          for (const sId of seeds) {
+            acts.push({ act: "sowSeed", arg: `${field.id}:${sId}`, label: `Sow ${CROPS[sId].name}` });
+          }
+        } else {
+          for (const sId of seeds) {
+            if (sId !== field.seed) acts.push({ act: "sowSeed", arg: `${field.id}:${sId}`, label: `Replant ${CROPS[sId].name}` });
+          }
         }
       } else if (selected.type === "flora") {
         const item = state.flora[selected.id];

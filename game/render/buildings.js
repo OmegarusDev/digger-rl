@@ -3,7 +3,7 @@ import { drawSunShadow } from "../../forge/sun.js";
 import { withAlpha, drawLabel } from "../../forge/draw.js";
 import { BUILDINGS, SITE_POSTS } from "../data/buildings.js";
 
-export function drawBuilding(ctx, cam, P, b, hover, sun) {
+export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
   const p = cam.project(b.x, b.y);
   if (p.y < -140 || p.y > cam.screenH + 140 || p.x < -140 || p.x > cam.screenW + 140) return;
   const s = cam.scale * p.s;
@@ -27,6 +27,7 @@ export function drawBuilding(ctx, cam, P, b, hover, sun) {
 
   drawSunShadow(ctx, cam, sun, b.x, b.y, 0.58, 0.85, 0.28);
   drawVisual(ctx, cam.V, def.visual, p.x, p.y, s, P.building);
+  if (def.sails) drawSails(ctx, cam, P, p, s, t);
   if (hover) {
     ctx.strokeStyle = withAlpha(P.ui.accent, 0.7);
     ctx.lineWidth = 1.5;
@@ -35,6 +36,37 @@ export function drawBuilding(ctx, cam, P, b, hover, sun) {
     ctx.stroke();
     ctx.lineWidth = 1;
   }
+}
+
+function drawSails(ctx, cam, P, p, s, t) {
+  const hubX = p.x;
+  const hubY = p.y - 0.98 * s * cam.V.vExag;
+  const r = 0.34 * s;
+  const angle = t * 0.6;
+  ctx.strokeStyle = "#8a6a44";
+  ctx.lineWidth = Math.max(1.4, 0.035 * s);
+  ctx.lineCap = "round";
+  for (let i = 0; i < 4; i++) {
+    const a = angle + (i / 4) * Math.PI * 2;
+    const ex = hubX + Math.cos(a) * r;
+    const ey = hubY + Math.sin(a) * r * 0.9;
+    ctx.beginPath();
+    ctx.moveTo(hubX, hubY);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(233,223,198,0.75)";
+    ctx.beginPath();
+    ctx.moveTo(hubX + Math.cos(a) * r * 0.35, hubY + Math.sin(a) * r * 0.32);
+    ctx.lineTo(ex, ey);
+    ctx.lineTo(hubX + Math.cos(a + 0.35) * r * 0.5, hubY + Math.sin(a + 0.35) * r * 0.45);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = "#54402a";
+  ctx.beginPath();
+  ctx.arc(hubX, hubY, Math.max(1.5, 0.03 * s), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineCap = "butt";
 }
 
 export function drawGhost(ctx, cam, P, kind, wx, wy, valid) {

@@ -7,6 +7,9 @@ import { makePalette } from "./forge/palette.js";
 import { createSim } from "./game/sim/sim.js";
 import { findFloraNear, findBuildingNear, carryTotal } from "./game/sim/founder.js";
 import { canPlace, placeBuilding } from "./game/sim/state.js";
+import { placeField, fieldTilesValid, FIELD_TILE_CAP } from "./game/sim/fields.js";
+import { CROPS } from "./game/data/crops.js";
+import { FIELD_PLACE } from "./game/data/buildings.js";
 import { WORK_RANGE } from "./game/sim/founder.js";
 import { inspectableAt } from "./game/sim/inspect.js";
 import { unassign } from "./game/sim/jobs.js";
@@ -71,6 +74,10 @@ sim.state.bus.on("handsFull", (e) => fx.float(e.x, e.y - 0.6, "hands full", "#e9
 sim.state.bus.on("hunt", (e) => fx.emit("pop", e.x, e.y, { color: "#8a3a2a" }));
 sim.state.bus.on("trapSet", (e) => fx.emit("dust", e.x, e.y, { count: 4 }));
 sim.state.bus.on("refined", (e) => fx.float(e.x, e.y - 0.6, `+${e.n} ${GOODS[e.good].name}`, "#e9dfc6"));
+sim.state.bus.on("cropDied", (e) => hud.toast("The winter frost has killed the crop"));
+sim.state.bus.on("field", (e) => fx.emit("dust", e.x, e.y, { count: 6 }));
+sim.state.bus.on("sown", (e) => fx.emit("leafPuff", e.x, e.y, { count: 3, color: "#6f8c4c" }));
+sim.state.bus.on("harvested", (e) => fx.emit("chips", e.x, e.y, { count: 4, color: "#c8a03c" }));
 sim.state.bus.on("died", (e) => {
   hud.toast(`${e.name} has died`);
   fx.emit("pop", e.x, e.y, {});
@@ -95,6 +102,19 @@ const panel = createInfoPanel(document.getElementById("ui"), (act, arg) => {
       const r = expandStorage(sim.state, b);
       hud.toast(r.ok ? `Storage expanded to level ${b.storageLvl}` : r.reason);
     }
+  } else if (act === "sowSeed") {
+    const [fId, seed] = arg.split(":");
+    const field = sim.state.fields.find((ff) => ff.id === Number(fId));
+    if (field) {
+      if (!field.seed || field.stage === -1) {
+        field.seed = seed;
+        field.queuedSeed = null;
+        hud.toast(`The field is sown with ${CROPS[seed].name}`);
+      } else {
+        field.queuedSeed = seed;
+        hud.toast(`Will replant ${CROPS[seed].name} after the harvest`);
+      }
+    }
   } else if (act === "unassign") {
     const [bId, vId] = arg.split(":").map(Number);
     const b = sim.state.buildings.find((bb) => bb.id === bId);
@@ -105,14 +125,17 @@ const panel = createInfoPanel(document.getElementById("ui"), (act, arg) => {
 });
 
 let placing = null;
+let fieldDrag = null;
 let selected = null;
-const buildbar = createBuildBar(document.getElementById("ui"), BUILDINGS, {
+const buildbar = createBuildBar(document.getElementById("ui"), { ...BUILDINGS, field: FIELD_PLACE }, {
   onPick: (kindId) => {
     placing = kindId;
-    hud.toast(`${BUILDINGS[kindId].name} — click a clear tile to place it, right-click to cancel`);
+    const def = BUILDINGS[kindId] ?? FIELD_PLACE;
+    hud.toast(`${def.name} — ${kindId === "field" ? "drag to till a plot" : "click a clear tile to place it, right-click to cancel"}`);
   },
   onCancel: () => {
     placing = null;
+    fieldDrag = null;
   },
 });
 
@@ -197,9 +220,14 @@ function frameInner(dt) {
       }
     } else if (k === "Escape" || k === "RightClick") {
       placing = null;
+      fieldDrag = null;
       selected = null;
       buildbar.setActive(null);
       buildbar.close();
+    } else if (k === "KeyR" && placing === "field") {
+      placing = null;
+      fieldDrag = null;
+      buildbar.setActive(null);
     }
   }
 
@@ -208,7 +236,7 @@ function frameInner(dt) {
     if (follow) cam.setZoom(z);
     else cam.zoomAt(io.zoom.x, io.zoom.y, z);
   }
-  if (io.drag.moved) {
+  if (io.drag.moved && placing !== "field") {
     cam.panBy(io.drag.dx, io.drag.dy);
     if (follow && Math.abs(io.drag.dx) + Math.abs(io.drag.dy) > 3) follow = false;
   }
@@ -222,24 +250,54 @@ function frameInner(dt) {
   f.cmd = { dx: mdx, dy: mdy };
 
   let ghost = null;
+  let ghostField = null;
   let hoverItem = null;
   let hoverBuilding = null;
   if (input.mouseInside) {
     const hw = cam.screenToWorld(input.mouseX, input.mouseY);
-    if (placing) {
+    if (placing && placing !== "field") {
       const cx = Math.floor(hw.x);
       const cy = Math.floor(hw.y);
       const check = canPlace(sim.state, placing, cx + 0.5, cy + 0.5);
       ghost = { kind: placing, x: cx + 0.5, y: cy + 0.5, valid: check.ok, reason: check.reason };
-    } else {
+    } else if (placing !== "field") {
       hoverItem = findFloraNear(sim.state, hw.x, hw.y, 0.8);
       hoverBuilding = findBuildingNear(sim.state, hw.x, hw.y, 0.5);
     }
   }
 
+  if (placing === "field") {
+    const origin = input.dragOrigin;
+    if (origin && origin.button === 0 && !fieldDrag) {
+      const w0 = cam.screenToWorld(origin.x, origin.y);
+      fieldDrag = { ax: Math.floor(w0.x), ay: Math.floor(w0.y), tiles: null, reason: "" };
+    }
+    if (fieldDrag && input.mouseInside) {
+      const hw = cam.screenToWorld(input.mouseX, input.mouseY);
+      const tiles = rectTiles(fieldDrag.ax, fieldDrag.ay, Math.floor(hw.x), Math.floor(hw.y));
+      const check = fieldTilesValid(sim.state, tiles);
+      const afford = (sim.state.stores.log ?? 0) >= tiles.length;
+      fieldDrag.tiles = tiles;
+      fieldDrag.reason = afford ? check.reason : "Not enough logs";
+      ghostField = { tiles, valid: check.ok && afford };
+    }
+  } else if (fieldDrag) {
+    fieldDrag = null;
+  }
+
+  if (io.up && fieldDrag) {
+    const tiles = fieldDrag.tiles ?? [];
+    if (tiles.length) {
+      const res = placeField(sim.state, tiles);
+      hud.toast(res.ok ? `Field staked — ${tiles.length} tiles` : res.reason);
+    }
+    fieldDrag = null;
+    ghostField = null;
+  }
+
   if (io.click && io.click.button === 0) {
     const w = cam.screenToWorld(io.click.x, io.click.y);
-    if (placing) {
+    if (placing && placing !== "field") {
       const check = canPlace(sim.state, placing, w.x, w.y);
       if (check.ok) {
         placeBuilding(sim.state, placing, w.x, w.y);
@@ -268,10 +326,24 @@ function frameInner(dt) {
   if (follow) cam.follow(f.x, f.y);
   cam.tick(dt);
   cam.clear(ctx, "#0f130a");
-  renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost });
+  renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost, ghostField });
   buildbar.refresh(sim.state.stores);
   panel.update(sim.state, selected, f);
   hud.update(sim.state, f);
+}
+
+function rectTiles(ax, ay, bx, by) {
+  const x0 = Math.min(ax, bx);
+  const y0 = Math.min(ay, by);
+  let w = Math.abs(bx - ax) + 1;
+  let h = Math.abs(by - ay) + 1;
+  if (w > FIELD_TILE_CAP) w = FIELD_TILE_CAP;
+  if (w * h > FIELD_TILE_CAP) h = Math.max(1, Math.floor(FIELD_TILE_CAP / w));
+  const tiles = [];
+  for (let y = y0; y < y0 + h; y++) {
+    for (let x = x0; x < x0 + w; x++) tiles.push({ x, y });
+  }
+  return tiles;
 }
 
 loop.start();

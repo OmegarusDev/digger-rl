@@ -39,7 +39,7 @@ export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
     card.appendChild(ic);
     const txt = document.createElement("span");
     txt.className = "build-txt";
-    txt.innerHTML = `<span class="build-name">${def.name}</span><span class="build-cost">${Object.entries(def.cost)
+    txt.innerHTML = `<span class="build-name">${def.name}</span><span class="build-cost">${def.costNote ?? Object.entries(def.cost)
       .map(([gg, c]) => `${c} ${GOODS[gg].name}`)
       .join(" · ")}</span>`;
     card.appendChild(txt);
@@ -98,6 +98,7 @@ export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
     },
     refresh(stores) {
       for (const [kindId, def] of Object.entries(BUILDINGS)) {
+        if (kindId === "field") continue;
         const ok = Object.entries(def.cost).every(([gg, c]) => (stores[gg] ?? 0) >= c);
         cards[kindId].classList.toggle("poor", !ok);
       }
@@ -135,6 +136,20 @@ function paintBuildingIcon(g, kind) {
     g.fillRect(19, 22, 6, 10);
     g.fillStyle = "#685032";
     g.fillRect(30, 8, 4, 7);
+  } else if (kind === "field") {
+    g.fillStyle = "#6b5136";
+    g.fillRect(6, 8, 32, 24);
+    g.strokeStyle = "#8a6c48";
+    g.lineWidth = 2;
+    for (let i = 0; i < 4; i++) {
+      g.beginPath();
+      g.moveTo(9, 12 + i * 5);
+      g.lineTo(35, 12 + i * 5);
+      g.stroke();
+    }
+    g.fillStyle = "#c8a03c";
+    g.fillRect(26, 6, 3, 8);
+    g.fillRect(22, 4, 11, 3);
   } else {
     g.fillStyle = "#8a6a44";
     g.fillRect(9, 26, 26, 6);

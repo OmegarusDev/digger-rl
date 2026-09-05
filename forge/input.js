@@ -43,6 +43,8 @@ export class Input {
       canvas.releasePointerCapture?.(e.pointerId);
       if (this.dragging && this._dragStart && !this._dragStart.moved) {
         this._pendingClick = { x: e.clientX, y: e.clientY, button: this._dragStart.button };
+      } else if (this.dragging && this._dragStart && this._dragStart.moved) {
+        this._dragReleased = { x: e.clientX, y: e.clientY, button: this._dragStart.button };
       }
       this.dragging = false;
       this._dragStart = null;
@@ -71,16 +73,22 @@ export class Input {
     return this.keys.has(code);
   }
 
+  get dragOrigin() {
+    return this._dragStart ? { x: this._dragStart.x, y: this._dragStart.y, button: this._dragStart.button } : null;
+  }
+
   consumeOneShots() {
     const o = [...this._oneshots];
     this._oneshots.clear();
     const click = this._pendingClick;
     this._pendingClick = null;
+    const up = this._dragReleased;
+    this._dragReleased = null;
     const zoom = { delta: this._zoomDelta, x: this._zoomX ?? this.mouseX, y: this._zoomY ?? this.mouseY };
     this._zoomDelta = 0;
     const drag = { dx: this._dragDx || 0, dy: this._dragDy || 0, moved: !!this._dragStart?.moved };
     this._dragDx = 0;
     this._dragDy = 0;
-    return { keys: o, click, zoom, drag };
+    return { keys: o, click, up, zoom, drag };
   }
 }

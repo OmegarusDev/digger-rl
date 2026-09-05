@@ -1,4 +1,5 @@
 import { findFloraNear } from "./founder.js";
+import { fieldAt } from "./fields.js";
 
 export function inspectableAt(state, wx, wy) {
   const f = state.founder;
@@ -9,6 +10,8 @@ export function inspectableAt(state, wx, wy) {
   for (const b of state.buildings) {
     if (Math.hypot(b.x - wx, b.y - wy) < 0.6) return { type: "building", id: b.id };
   }
+  const field = fieldAt(state, wx, wy);
+  if (field) return { type: "field", id: field.id };
   const c = state.camp;
   if (Math.hypot(c.x + 1.65 - wx, c.y + 0.1 - wy) < 0.6) return { type: "wagon" };
   if (Math.hypot(c.x - 0.4 - wx, c.y + 1.05 - wy) < 0.55) return { type: "fire" };

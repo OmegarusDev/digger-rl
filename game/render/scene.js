@@ -3,6 +3,7 @@ import { drawBuilding, drawGhost } from "./buildings.js";
 import { drawFounder, drawCamp, drawFireGlow } from "./camp.js";
 import { drawVillager } from "./villager.js";
 import { drawDeer, drawTrap } from "./fauna.js";
+import { drawField, drawFieldGhost } from "./fields.js";
 import { WORK_RANGE } from "../sim/founder.js";
 import { withAlpha } from "../../forge/draw.js";
 import { sunState } from "../../forge/sun.js";
@@ -30,6 +31,10 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
     if (trap.x < b.left - 3 || trap.x > b.right + 3 || trap.y < b.top - 4 || trap.y > b.bottom + 4) continue;
     drawTrap(ctx, cam, P, trap, trap.caught);
   }
+  for (const field of state.fields) {
+    if (field.cx < b.left - 24 || field.cx > b.right + 24 || field.cy < b.top - 24 || field.cy > b.bottom + 24) continue;
+    drawField(ctx, cam, P, field, t);
+  }
   for (const bd of state.buildings) {
     if (bd.x < b.left - 3 || bd.x > b.right + 3 || bd.y < b.top - 4 || bd.y > b.bottom + 4) continue;
     drawList.push({ y: bd.y, bd });
@@ -44,7 +49,7 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
     if (e.founder) drawFounder(ctx, cam, P, state.founder, sun);
     else if (e.villager) drawVillager(ctx, cam, P, e.villager, sun);
     else if (e.deer) drawDeer(ctx, cam, P, e.deer, sun);
-    else if (e.bd) drawBuilding(ctx, cam, P, e.bd, opts.hoverBuilding?.id === e.bd.id, sun);
+    else if (e.bd) drawBuilding(ctx, cam, P, e.bd, opts.hoverBuilding?.id === e.bd.id, sun, t);
     else drawFlora(ctx, cam, P, e.item, t, sun);
   }
 
@@ -64,6 +69,10 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
 
   if (opts.ghost) {
     drawGhost(ctx, cam, P, opts.ghost.kind, opts.ghost.x, opts.ghost.y, opts.ghost.valid);
+  }
+
+  if (opts.ghostField) {
+    drawFieldGhost(ctx, cam, opts.ghostField.tiles, opts.ghostField.valid);
   }
 
   fx.draw(ctx, (x, y) => cam.project(x, y), cam.scale);

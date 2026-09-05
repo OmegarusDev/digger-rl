@@ -97,6 +97,53 @@ export const BUILDINGS = {
       ["diamond", { x: 0.42, y: 0.34, r: 0.07, h: 0.1, top: "stoneHi", side: "stone", dark: "stoneDark" }],
     ],
   },
+  barn: {
+    name: "Barn",
+    desc: "Sows, waters and harvests nearby fields, and keeps the grain",
+    cost: { log: 10, lumber: 4 },
+    work: 14,
+    job: "farmer",
+    slots: [1, 2, 2],
+    radius: 10,
+    storage: { grain: 20 },
+    visual: [
+      ["box", { w: 0.9, d: 0.7, h: 0.44, top: "woodHi", side: "wood", dark: "woodDark" }],
+      ["roof", { y: 0.44, w: 1.06, d: 0.86, h: 0.4, c: "roof", top: "roofDark", gable: "woodDark" }],
+      ["box", { x: 0, y: 0.37, w: 0.2, d: 0.06, h: 0.26, top: "woodHi", side: "woodDark", dark: "woodDark" }],
+    ],
+  },
+  mill: {
+    name: "Mill",
+    desc: "Grinds grain from the barn into flour",
+    cost: { log: 12, lumber: 8, stoneBlock: 2 },
+    work: 16,
+    job: "miller",
+    slots: [1, 2, 2],
+    storage: { grain: 8, flour: 8 },
+    recipe: { in: { grain: 2 }, out: { flour: 1 }, swings: 4 },
+    sails: true,
+    visual: [
+      ["frustum", { rxBot: 0.42, rxTop: 0.3, h: 0.78, top: "canvasHi", side: "canvas", dark: "canvasDark" }],
+      ["roof", { y: 0.78, w: 0.6, d: 0.6, h: 0.26, c: "roof", top: "roofDark", gable: "canvasDark" }],
+      ["box", { y: 0.34, w: 0.24, d: 0.1, h: 0.18, top: "woodHi", side: "wood", dark: "woodDark" }],
+    ],
+  },
+  bakery: {
+    name: "Bakery",
+    desc: "Flour becomes bread — the village's true wealth",
+    cost: { log: 10, lumber: 10, stoneBlock: 3 },
+    work: 16,
+    job: "baker",
+    slots: [1, 2, 2],
+    storage: { flour: 8, bread: 8 },
+    recipe: { in: { flour: 1 }, out: { bread: 1 }, swings: 4 },
+    visual: [
+      ["box", { w: 0.8, d: 0.66, h: 0.42, top: "canvasHi", side: "canvas", dark: "canvasDark" }],
+      ["roof", { y: 0.42, w: 0.96, d: 0.8, h: 0.34, c: "roof", top: "roofDark", gable: "woodDark" }],
+      ["cyl", { x: 0.32, y: -0.28, r: 0.09, h: 0.5, top: "stoneHi", side: "stone", dark: "stoneDark" }],
+      ["diamond", { x: -0.2, y: 0.36, r: 0.12, h: 0.14, top: "#c89a5a", side: "#a87a42", dark: "#7a5630" }],
+    ],
+  },
   house: {
     name: "House",
     desc: "A roof and a hearth — beds keep villagers strong through the night",
@@ -129,3 +176,10 @@ export const SITE_POSTS = [
   ["post", { x: -0.3, y: 0.28, h: 0.26 }],
   ["post", { x: 0.3, y: 0.28, h: 0.3 }],
 ];
+
+export const FIELD_PLACE = {
+  name: "Field",
+  desc: "Drag to till a plot — sow it, and the barn's farmers will work it",
+  cost: { log: 1 },
+  costNote: "1 log per tile — drag to size it",
+};

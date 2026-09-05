@@ -1,11 +1,13 @@
 import { BUILDINGS } from "../../data/buildings.js";
 import { carryUnits } from "../../data/goods.js";
 import { steerTo } from "../mover.js";
-import { depositCarry, nearestDeposit } from "../haul.js";
+import { depositCarry, nearestDeposit, depositIntoBuilding } from "../haul.js";
 import { addToBuilding, capOf, storageCount } from "../storage.js";
 import { villagerSwingRate, gainSkill } from "../villager.js";
 import { floraAtCell } from "../state.js";
 import { pathTo } from "../grid.js";
+
+export { depositIntoBuilding };
 
 export function buildingWorkSpot(b) {
   return { x: b.x, y: b.y + 0.55 };
@@ -27,22 +29,6 @@ export function swingTask(state, v, prof, action, tx, ty, dt, onHit) {
   gainSkill(v, prof);
   onHit();
   return true;
-}
-
-export function depositIntoBuilding(state, b, agent) {
-  const def = BUILDINGS[b.kind];
-  if (!def.storage || !b.storage) return depositCarry(state, agent);
-  let moved = 0;
-  for (const good of Object.keys(def.storage)) {
-    const n = agent.carry[good] ?? 0;
-    if (!n) continue;
-    const accepted = addToBuilding(state, b, good, n);
-    if (accepted > 0) {
-      agent.carry[good] = n - accepted;
-      moved += accepted;
-    }
-  }
-  return moved;
 }
 
 export function buildingAccepts(v, b) {
@@ -73,9 +59,14 @@ export function claimFlora(state, v, task, item) {
 export function releaseTask(state, v) {
   const t = v.task;
   if (!t?.claims) return;
-  for (const id of t.claims) {
-    const f = state.flora[id];
-    if (f && f.claimedBy === v.id) f.claimedBy = null;
+  for (const c of t.claims) {
+    if (typeof c === "string" && c.startsWith("f")) {
+      const field = (state.fields ?? []).find((ff) => ff.id === Number(c.slice(1)));
+      if (field && field.claimedBy === v.id) field.claimedBy = null;
+    } else {
+      const f = state.flora[c];
+      if (f && f.claimedBy === v.id) f.claimedBy = null;
+    }
   }
 }
 

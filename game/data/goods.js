@@ -9,7 +9,7 @@ export const GOODS = {
   bread: { name: "Bread" },
 };
 
-export const CARRY_GOODS = ["food", "log", "lumber", "rawStone", "stoneBlock"];
+export const CARRY_GOODS = ["food", "log", "lumber", "rawStone", "stoneBlock", "grain", "flour", "bread"];
 
 export const DEPOSIT_AS = {
   food: "food",

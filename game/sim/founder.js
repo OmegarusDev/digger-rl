@@ -4,8 +4,9 @@ import { nearestWalkable } from "./grid.js";
 import { mulberry32 } from "../../forge/rng.js";
 import { FLORA_YIELD, carryUnits } from "../data/goods.js";
 import { BUILDINGS } from "../data/buildings.js";
-import { depositCarry } from "./haul.js";
+import { depositCarry, depositIntoBuilding } from "./haul.js";
 import { hasInputs, outputRoom, consumeInputs, produceOutputs, takeFromBuilding, storageCount } from "./storage.js";
+import { fieldById, fieldAction, fieldSwingHit, harvestYield, nearestFieldTask } from "./fields.js";
 
 const NAMES = ["Rowan", "Aldwin", "Bram", "Cedric", "Dunstan", "Edric", "Godric", "Wystan"];
 export const WORK_RANGE = 1.45;
@@ -49,6 +50,10 @@ function resolveTarget(state, wt) {
   if (wt.type === "flora") {
     const item = state.flora[wt.id];
     return item && item.state === "alive" ? item : null;
+  }
+  if (wt.type === "field") {
+    const field = fieldById(state, wt.id);
+    return field && fieldAction(field) ? field : null;
   }
   if (wt.type === "building") {
     const b = buildingAtCell(state, Math.floor(wt.x), Math.floor(wt.y));
@@ -101,8 +106,14 @@ function autoDeposit(state, f) {
   if (carryTotal(f) <= 0) return;
   for (const pt of depositPoints(state)) {
     if (Math.hypot(f.x - pt.x, f.y - pt.y) < DEPOSIT_RANGE) {
-      depositCarry(state, f);
-      return;
+      if (depositCarry(state, f) > 0 || carryTotal(f) <= 0) return;
+    }
+  }
+  for (const b of state.buildings) {
+    if (b.state !== "built" || !b.storage) continue;
+    if (Math.hypot(f.x - b.x, f.y - b.y) < DEPOSIT_RANGE) {
+      depositIntoBuilding(state, b, f);
+      if (carryTotal(f) <= 0) return;
     }
   }
 }
@@ -116,6 +127,26 @@ function handsFull(state, f) {
 
 function doWork(state, dt, wt, t) {
   const f = state.founder;
+  if (wt.type === "field") {
+    f.action = "pick";
+    f.dir = Math.atan2(t.cy - f.y, t.cx - f.x);
+    f.swing += dt * (f.swingRate + (f.skills.woodcraft || 0) * 0.8);
+    if (f.swing < 1) return;
+    f.swing = 0;
+    const done = fieldSwingHit(state, t);
+    if (done === "harvest") {
+      const y = harvestYield(t);
+      const add = Math.min(y.n, Math.max(0, f.carryMax - carryTotal(f)));
+      f.carry[y.good] = (f.carry[y.good] ?? 0) + add;
+      state.bus.emit("gather", { x: f.x, y: f.y, good: y.good, n: add });
+    }
+    if (!fieldAction(t)) {
+      f.workTarget = null;
+      f.action = null;
+      if (f.workLatch) acquireWork(state, f, REACH);
+    }
+    return;
+  }
   if (wt.type === "flora") {
     f.action = t.kind === "rock" ? "mine" : t.kind === "berry" ? "pick" : "chop";
   } else if (t.state === "site") {
@@ -243,6 +274,14 @@ function acquireWork(state, f, range) {
           if (d <= range && (!best || d < best.d)) best = { wt: { type: "building", id: b.id, x: b.x, y: b.y }, d };
         }
       }
+    }
+  }
+  if (!best) {
+    for (const field of state.fields ?? []) {
+      const act = fieldAction(field);
+      if (!act) continue;
+      const d = Math.hypot(field.cx - f.x, field.cy - f.y);
+      if (d <= range + 1 && (!best || d < best.d)) best = { wt: { type: "field", id: field.id }, d };
     }
   }
   if (best) f.workTarget = best.wt;

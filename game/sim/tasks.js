@@ -6,8 +6,21 @@ import * as mine from "./work/mine.js";
 import * as gather from "./work/gather.js";
 import * as fish from "./work/fish.js";
 import * as hunt from "./work/hunt.js";
+import * as farm from "./work/farm.js";
+import * as mill from "./work/mill.js";
+import * as bake from "./work/bake.js";
 
-const HANDLERS = { sawyer, lumberjack: yard, miner: mine, gatherer: gather, fisher: fish, hunter: hunt };
+const HANDLERS = {
+  sawyer,
+  lumberjack: yard,
+  miner: mine,
+  gatherer: gather,
+  fisher: fish,
+  hunter: hunt,
+  farmer: farm,
+  miller: mill,
+  baker: bake,
+};
 
 export function workTick(state, v, dt) {
   const b = buildingById(state, v.workplace.id);
