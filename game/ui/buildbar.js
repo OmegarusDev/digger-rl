@@ -1,3 +1,5 @@
+import { GOODS } from "../data/goods.js";
+
 export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
   const fab = document.createElement("button");
   fab.className = "build-fab clickable";
@@ -38,7 +40,7 @@ export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
     const txt = document.createElement("span");
     txt.className = "build-txt";
     txt.innerHTML = `<span class="build-name">${def.name}</span><span class="build-cost">${Object.entries(def.cost)
-      .map(([gg, c]) => `${c} ${gg}`)
+      .map(([gg, c]) => `${c} ${GOODS[gg].name}`)
       .join(" · ")}</span>`;
     card.appendChild(txt);
     card.addEventListener("click", (e) => {

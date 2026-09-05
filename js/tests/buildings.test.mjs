@@ -29,12 +29,12 @@ function findSpotNearFounder(sim) {
   const sim = createSim(777);
   const state = sim.state;
   run(sim, 1);
-  state.stores.wood = 40;
+  state.stores.log = 40;
   const spot = findSpotNearFounder(sim);
   assert.ok(spot, "buildable spot exists near founder");
   const res = placeBuilding(state, "hut", spot.x, spot.y);
   assert.ok(res.ok, `hut placed (${res.reason})`);
-  assert.equal(state.stores.wood, 28, "cost deducted");
+  assert.equal(state.stores.log, 28, "cost deducted");
   const cx = Math.floor(spot.x);
   const cy = Math.floor(spot.y);
   assert.equal(state.walk[cy * state.size + cx], 0, "site blocks its cell");
@@ -43,7 +43,7 @@ function findSpotNearFounder(sim) {
   const dup = placeBuilding(state, "hut", spot.x, spot.y);
   assert.ok(!dup.ok, "cannot build on occupied cell");
   const broke = placeBuilding(state, "store", spot.x + 1, spot.y);
-  if (broke.ok) assert.equal(state.stores.wood, 20, "second cost deducted");
+  if (broke.ok) assert.equal(state.stores.log, 20, "second cost deducted");
 }
 
 {
@@ -51,7 +51,7 @@ function findSpotNearFounder(sim) {
   const state = sim.state;
   const f = state.founder;
   run(sim, 1);
-  state.stores.wood = 60;
+  state.stores.log = 60;
   const spot = findSpotNearFounder(sim);
   const res = placeBuilding(state, "hut", spot.x, spot.y);
   assert.ok(res.ok, "site placed");
@@ -73,17 +73,17 @@ function findSpotNearFounder(sim) {
   f.workTarget = null;
   assert.equal(b.state, "built", "founder constructed the hut");
 
-  f.carry = { wood: 0, food: 0, stone: 0 };
+  f.carry = { food: 0, log: 0, lumber: 0, rawStone: 0, stoneBlock: 0 };
   f.x = b.x - 1.1;
   f.y = b.y;
   f.workLatch = true;
   f.workTarget = { type: "building", id: b.id, x: b.x, y: b.y };
-  const woodBefore = state.stores.wood + (f.carry.wood ?? 0);
+  const woodBefore = state.stores.log + (f.carry.log ?? 0);
   run(sim, 6);
   f.workLatch = false;
   f.workTarget = null;
-  const woodAfter = state.stores.wood + (f.carry.wood ?? 0);
-  assert.ok(woodAfter > woodBefore, `hut sawing yields wood (${woodBefore} -> ${woodAfter})`);
+  const woodAfter = state.stores.log + (f.carry.log ?? 0);
+  assert.ok(woodAfter > woodBefore, `hut sawing yields logs (${woodBefore} -> ${woodAfter})`);
 }
 
 {
@@ -91,7 +91,7 @@ function findSpotNearFounder(sim) {
   const state = sim.state;
   const f = state.founder;
   run(sim, 1);
-  state.stores.wood = 60;
+  state.stores.log = 60;
   const spot = findSpotNearFounder(sim);
   const res = placeBuilding(state, "store", spot.x, spot.y);
   assert.ok(res.ok, "storehouse placed");
@@ -99,12 +99,12 @@ function findSpotNearFounder(sim) {
   b.state = "built";
   const pts = depositPoints(state);
   assert.equal(pts.length, 2, "storehouse adds a deposit point");
-  f.carry.wood = 4;
+  f.carry.log = 4;
   f.x = b.x;
   f.y = b.y + 1.2;
   run(sim, 0.2);
-  assert.equal(f.carry.wood, 0, "deposited at storehouse");
-  assert.ok(state.stores.wood >= 4, "wood landed in stores");
+  assert.equal(f.carry.log, 0, "deposited at storehouse");
+  assert.ok(state.stores.log >= 4, "logs landed in stores");
 }
 
 {

@@ -34,16 +34,16 @@ function walkTo(sim, f, x, y, within) {
   run(sim, 3);
   assert.ok(state.time.t > 0, "time advances");
   assert.equal(state.stats.treesFelled, 0, "founder never works without player input");
-  assert.equal(state.stores.wood, 0, "no autonomous production");
+  assert.equal(state.stores.log, 0, "no autonomous production");
 }
 
 {
   const sim = createSim(777);
   run(sim, 1);
-  const w1 = sim.state.stores.wood;
+  const w1 = sim.state.stores.log;
   const simB = createSim(777);
   run(simB, 1);
-  assert.equal(simB.state.stores.wood, w1, "sim deterministic across instances");
+  assert.equal(simB.state.stores.log, w1, "sim deterministic across instances");
 }
 
 {
@@ -90,7 +90,7 @@ function walkTo(sim, f, x, y, within) {
 
   assert.ok(walkTo(sim, f, state.camp.x + 0.5, state.camp.y + 0.5, 1.4), "walked back to camp");
   run(sim, 0.2);
-  assert.ok(state.stores.wood > 0, `deposited wood at camp (${state.stores.wood})`);
+  assert.ok(state.stores.log > 0, `deposited logs at camp (${state.stores.log})`);
 }
 
 {
@@ -154,7 +154,7 @@ function walkTo(sim, f, x, y, within) {
     f.workTarget = { type: "flora", id: rock.id };
     run(sim, 15);
     assert.ok(rock.state === "gone", "rock quarried out");
-    assert.ok(f.carry.stone > 0, "stone gathered");
+    assert.ok(f.carry.rawStone > 0, "raw stone gathered");
   }
 }
 

@@ -2,6 +2,7 @@ import { box25 } from "../../forge/prims.js";
 import { mats, withAlpha } from "../../forge/draw.js";
 import { drawAgent } from "../../forge/agents.js";
 import { drawSunShadow } from "../../forge/sun.js";
+import { carryUnits } from "../data/goods.js";
 
 export function makeFounderSkin(P) {
   return {
@@ -30,7 +31,7 @@ export function drawFounder(ctx, cam, P, founder, sun) {
       dir: founder.dir,
       action: founder.action,
       swing: founder.swing,
-      carry: carryCount(founder),
+      carry: carryUnits(founder.carry),
       flash: 0,
     },
     skin,
@@ -44,10 +45,6 @@ export function drawFounder(ctx, cam, P, founder, sun) {
   ctx.ellipse(p.x, p.y + 2 * p.s, 0.34 * cam.scale * p.s, 0.34 * cam.scale * p.s * cam.V.deckRatio, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.lineWidth = 1;
-}
-
-function carryCount(f) {
-  return (f.carry?.wood ?? 0) + (f.carry?.food ?? 0) + (f.carry?.stone ?? 0);
 }
 
 export function drawCamp(ctx, cam, P, state, t, sun) {
@@ -79,7 +76,7 @@ export function drawCamp(ctx, cam, P, state, t, sun) {
   ctx.lineTo(stash.x + w * 0.55, stash.y + 0.1 * scale * stash.s);
   ctx.stroke();
 
-  const pile = Math.min(4, Math.ceil(state.stores.wood / 6));
+  const pile = Math.min(4, Math.ceil(state.stores.log / 6));
   for (let i = 0; i < pile; i++) {
     const lp = cam.project(px + 1.15, py - 0.4 + 0.55);
     const ly = lp.y - i * 0.075 * cam.scale * stash.s;

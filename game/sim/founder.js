@@ -2,15 +2,15 @@ import { floraAtCell, fellTree, completeBuilding, depositPoints, buildingAtCell 
 import { nearestWalkable, pathTo } from "./grid.js";
 import { steerAlong } from "../../forge/paths.js";
 import { mulberry32 } from "../../forge/rng.js";
+import { FLORA_YIELD, CARRY_GOODS, DEPOSIT_AS, DEPOSIT_VALUE, carryUnits } from "../data/goods.js";
 
 const NAMES = ["Rowan", "Aldwin", "Bram", "Cedric", "Dunstan", "Edric", "Godric", "Wystan"];
 export const WORK_RANGE = 1.45;
 const REACH = 1.6;
 const DEPOSIT_RANGE = 1.7;
-const FLORA_YIELD = { tree: { good: "wood", n: 3 }, berry: { good: "food", n: 2 }, rock: { good: "stone", n: 4 } };
 
 export function carryTotal(f) {
-  return (f.carry.wood ?? 0) + (f.carry.food ?? 0) + (f.carry.stone ?? 0);
+  return carryUnits(f.carry);
 }
 
 export function createFounder(state) {
@@ -30,9 +30,9 @@ export function createFounder(state) {
     action: null,
     swing: 0,
     swingRate: 1.5,
-    carry: { wood: 0, food: 0, stone: 0 },
+    carry: { food: 0, log: 0, lumber: 0, rawStone: 0, stoneBlock: 0 },
     carryMax: 6,
-    skills: { wood: 0 },
+    skills: { woodcraft: 0 },
     hp: 100,
     maxHp: 100,
     cmd: { dx: 0, dy: 0 },
@@ -136,10 +136,12 @@ function autoDeposit(state, f) {
   for (const pt of depositPoints(state)) {
     if (Math.hypot(f.x - pt.x, f.y - pt.y) < DEPOSIT_RANGE) {
       let total = 0;
-      for (const good of ["wood", "food", "stone"]) {
-        if (f.carry[good] > 0) {
-          state.stores[good] += f.carry[good];
-          total += f.carry[good];
+      for (const good of CARRY_GOODS) {
+        const n = f.carry[good] ?? 0;
+        if (n > 0) {
+          const target = DEPOSIT_AS[good] ?? good;
+          state.stores[target] = (state.stores[target] ?? 0) + n * (DEPOSIT_VALUE[good] ?? 1);
+          total += n;
           f.carry[good] = 0;
         }
       }
@@ -211,7 +213,7 @@ function doWork(state, dt, wt, t) {
     f.action = "chop";
   }
   f.dir = Math.atan2(t.y - f.y, t.x - f.x);
-  f.swing += dt * (f.swingRate + (f.skills.wood || 0) * 0.8);
+  f.swing += dt * (f.swingRate + (f.skills.woodcraft || 0) * 0.8);
   if (f.swing < 1) return;
   f.swing = 0;
 
@@ -222,7 +224,7 @@ function doWork(state, dt, wt, t) {
     }
     t.hp -= 1;
     t.shakeT = 0.22;
-    f.skills.wood = Math.min(1, (f.skills.wood || 0) + 0.004);
+    f.skills.woodcraft = Math.min(1, (f.skills.woodcraft || 0) + 0.004);
     if (t.hp <= 0) {
       if (t.kind === "tree") {
         fellTree(state, t);
@@ -267,7 +269,7 @@ function doWork(state, dt, wt, t) {
       return;
     }
     const add = Math.min(1, room);
-    f.carry.wood += add;
+    f.carry.log += add;
     state.bus.emit("saw", { x: b.x, y: b.y, n: add });
   }
 }

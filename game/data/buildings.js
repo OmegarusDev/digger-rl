@@ -1,8 +1,8 @@
 export const BUILDINGS = {
   hut: {
     name: "Woodcutter's Hut",
-    desc: "Split logs at the sawhorse — steady wood without leaving the yard",
-    cost: { wood: 12 },
+    desc: "Split logs at the sawhorse — steady lumber without leaving the yard",
+    cost: { log: 12 },
     work: 14,
     job: "sawyer",
     visual: [
@@ -14,7 +14,7 @@ export const BUILDINGS = {
   store: {
     name: "Storehouse",
     desc: "An extra place to drop goods — the village will need the room",
-    cost: { wood: 8 },
+    cost: { log: 8 },
     work: 10,
     deposit: true,
     visual: [

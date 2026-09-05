@@ -217,7 +217,7 @@ function frameInner(dt) {
       const insp = inspectableAt(sim.state, w.x, w.y);
       selected = insp;
       if (insp && (insp.type === "flora" || insp.type === "building")) {
-        const t = insp.type === "flora" ? state.flora[insp.id] : state.buildings.find((bb) => bb.id === insp.id);
+        const t = insp.type === "flora" ? sim.state.flora[insp.id] : sim.state.buildings.find((bb) => bb.id === insp.id);
         const d = Math.hypot(t.x - f.x, t.y - f.y);
         if (d <= WORK_RANGE + 0.15) {
           f.workLatch = false;

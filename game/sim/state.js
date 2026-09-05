@@ -2,6 +2,7 @@ import { mulberry32 } from "../../forge/rng.js";
 import { createValley } from "../world/valley.js";
 import { createBus } from "./bus.js";
 import { BUILDINGS } from "../data/buildings.js";
+import { GOODS } from "../data/goods.js";
 import { DAY_LEN } from "./time.js";
 
 const TREE_HP = 5;
@@ -39,7 +40,7 @@ export function createState(seed) {
     buildings: [],
     buildingMap: new Map(),
     nextBuildingId: 1,
-    stores: { wood: 0, food: 0, stone: 0 },
+    stores: { food: 0, log: 0, lumber: 0, rawStone: 0, stoneBlock: 0 },
     camp: valley.camp,
     time: { t: 0.3 * DAY_LEN, day: 1, season: 0, tod: 0.3 },
     tick: 0,
@@ -140,7 +141,7 @@ export function canPlace(state, kindId, wx, wy) {
   if (Math.hypot(wx - (c.x + 1.65), wy - (c.y + 0.1)) < 1.3) return { ok: false, reason: "Too close to the supply wagon" };
   if (Math.hypot(wx - (c.x - 0.4), wy - (c.y + 1.05)) < 1.2) return { ok: false, reason: "Too close to the campfire" };
   for (const [good, cost] of Object.entries(def.cost)) {
-    if ((state.stores[good] ?? 0) < cost) return { ok: false, reason: `Need ${cost} ${good}` };
+    if ((state.stores[good] ?? 0) < cost) return { ok: false, reason: `Need ${cost} ${GOODS[good].name}` };
   }
   return { ok: true, reason: "" };
 }

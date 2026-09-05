@@ -1,3 +1,5 @@
+import { carryUnits } from "../data/goods.js";
+
 export function createInfoPanel(root) {
   const el = document.createElement("div");
   el.className = "info-panel";
@@ -41,15 +43,18 @@ export function createInfoPanel(root) {
       if (selected.type === "founder") {
         titleEl.textContent = `${f.name} — Founder`;
         lines = [
-          ["carry", `${carrySum(f)} / ${f.carryMax}`],
-          ["woodcraft", `${Math.round((f.skills.wood || 0) * 100)}%`],
+          ["carry", `${carryUnits(f.carry)} / ${f.carryMax}`],
+          ["woodcraft", `${Math.round((f.skills.woodcraft || 0) * 100)}%`],
           ["health", `${f.hp} / ${f.maxHp}`],
         ];
       } else if (selected.type === "wagon") {
         titleEl.textContent = "Supply Wagon";
         lines = [
           ["role", "drop goods here"],
-          ["wood stored", String(state.stores.wood)],
+          ["food stored", String(state.stores.food)],
+          ["logs stored", String(state.stores.log)],
+          ["lumber stored", String(state.stores.lumber)],
+          ["blocks stored", String(state.stores.stoneBlock)],
         ];
       } else if (selected.type === "fire") {
         titleEl.textContent = "Campfire";
@@ -74,14 +79,14 @@ export function createInfoPanel(root) {
           lines = [
             ["status", "standing"],
             ["chops left", `${item.hp}`],
-            ["yields", "3 wood"],
+            ["yields", "3 logs"],
           ];
         } else if (item.kind === "rock") {
           titleEl.textContent = "Boulder";
           lines = [
             ["status", "quarryable"],
             ["hits left", `${item.hp}`],
-            ["yields", "4 stone"],
+            ["yields", "4 raw stone"],
           ];
         } else if (item.kind === "berry") {
           titleEl.textContent = "Berry Bush";
@@ -128,6 +133,3 @@ export function createInfoPanel(root) {
   };
 }
 
-function carrySum(f) {
-  return (f.carry.wood ?? 0) + (f.carry.food ?? 0) + (f.carry.stone ?? 0);
-}

@@ -1,5 +1,6 @@
 import { SEASONS } from "../sim/time.js";
 import { clockLabel } from "../sim/time.js";
+import { carryUnits } from "../data/goods.js";
 
 export function createHud(root) {
   root.innerHTML = `
@@ -7,9 +8,10 @@ export function createHud(root) {
       <span class="date" id="hudDate">Spring, Day 1</span>
       <span class="clock" id="hudClock">07:12</span>
       <span class="sep"></span>
-      <span class="store"><canvas id="hudWoodIcon" width="16" height="16"></canvas><span class="n" id="hudWood">0</span></span>
       <span class="store"><canvas id="hudFoodIcon" width="16" height="16"></canvas><span class="n" id="hudFood">0</span></span>
-      <span class="store"><canvas id="hudStoneIcon" width="16" height="16"></canvas><span class="n" id="hudStone">0</span></span>
+      <span class="store"><canvas id="hudLogIcon" width="16" height="16"></canvas><span class="n" id="hudLog">0</span></span>
+      <span class="store"><canvas id="hudLumberIcon" width="16" height="16"></canvas><span class="n" id="hudLumber">0</span></span>
+      <span class="store"><canvas id="hudBlockIcon" width="16" height="16"></canvas><span class="n" id="hudBlock">0</span></span>
       <span class="sep"></span>
       <span class="store">carry <span class="n" id="hudCarry">0/6</span></span>
       <span class="sep"></span>
@@ -23,9 +25,10 @@ export function createHud(root) {
   const el = (id) => root.querySelector("#" + id);
   const dateEl = el("hudDate");
   const clockEl = el("hudClock");
-  const woodEl = el("hudWood");
+  const logEl = el("hudLog");
   const foodEl = el("hudFood");
-  const stoneEl = el("hudStone");
+  const lumberEl = el("hudLumber");
+  const blockEl = el("hudBlock");
   const carryEl = el("hudCarry");
   const popEl = el("hudPop");
   const pausedEl = el("hudPaused");
@@ -35,7 +38,7 @@ export function createHud(root) {
     const c = el(id);
     paint(c.getContext("2d"));
   }
-  icon("hudWoodIcon", (g) => {
+  icon("hudLogIcon", (g) => {
     g.fillStyle = "#7a5c3a";
     g.fillRect(2, 5, 12, 6);
     g.fillStyle = "#a88a5a";
@@ -60,23 +63,23 @@ export function createHud(root) {
       g.fill();
     }
   });
-  icon("hudStoneIcon", (g) => {
-    g.fillStyle = "#8d8578";
-    g.beginPath();
-    g.moveTo(3, 12);
-    g.lineTo(5, 5);
-    g.lineTo(11, 4);
-    g.lineTo(13, 10);
-    g.lineTo(10, 13);
-    g.closePath();
-    g.fill();
-    g.fillStyle = "rgba(255,250,230,0.25)";
-    g.beginPath();
-    g.moveTo(5, 5);
-    g.lineTo(11, 4);
-    g.lineTo(8, 8);
-    g.closePath();
-    g.fill();
+  icon("hudLumberIcon", (g) => {
+    g.fillStyle = "#b0934a";
+    g.fillRect(3, 4, 10, 4);
+    g.fillStyle = "#8a7136";
+    g.fillRect(3, 4, 10, 1);
+    g.fillStyle = "#c2a55e";
+    g.fillRect(3, 9, 10, 4);
+    g.fillStyle = "#8a7136";
+    g.fillRect(3, 9, 10, 1);
+  });
+  icon("hudBlockIcon", (g) => {
+    g.fillStyle = "#9a9284";
+    g.fillRect(3, 6, 10, 7);
+    g.fillStyle = "#b8b0a0";
+    g.fillRect(3, 6, 10, 2);
+    g.fillStyle = "#6e675c";
+    g.fillRect(3, 11, 10, 2);
   });
 
   let toastTimer = 0;
@@ -93,10 +96,11 @@ export function createHud(root) {
     update(state, founder) {
       setText(dateEl, "date", `${SEASONS[state.time.season]}, Day ${state.time.day}`);
       setText(clockEl, "clock", clockLabel(state.time.tod));
-      setText(woodEl, "wood", String(state.stores.wood));
+      setText(logEl, "log", String(state.stores.log));
       setText(foodEl, "food", String(state.stores.food));
-      setText(stoneEl, "stone", String(state.stores.stone));
-      const tot = founder ? (founder.carry.wood ?? 0) + (founder.carry.food ?? 0) + (founder.carry.stone ?? 0) : 0;
+      setText(lumberEl, "lumber", String(state.stores.lumber));
+      setText(blockEl, "block", String(state.stores.stoneBlock));
+      const tot = founder ? carryUnits(founder.carry) : 0;
       setText(carryEl, "carry", `${tot}/${founder?.carryMax ?? 6}`);
       setText(popEl, "pop", String(1 + state.villagers.length));
     },
