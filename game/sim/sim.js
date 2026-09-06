@@ -7,7 +7,7 @@ import { updateArrivals, spawnStartingVillagers } from "./camp.js";
 import { updateFauna } from "./fauna.js";
 import { updateFields } from "./fields.js";
 
-export const TICK_HZ = 30;
+export const TICK_HZ = 60;
 
 export function createSim(seed) {
   const state = createState(seed);

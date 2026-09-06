@@ -197,7 +197,7 @@ let follow = true;
 let t = 0;
 
 const loop = new GameLoop({
-  hz: 30,
+  hz: 60,
   update: (step) => sim.tick(step),
   render: (dt) => frame(dt),
 });

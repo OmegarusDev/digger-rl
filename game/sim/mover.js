@@ -62,7 +62,7 @@ export function detourTarget(state, m, dirx, diry) {
 }
 
 export function walkCmd(state, m, dirx, diry, dt) {
-  if (m.detour && dirx * m.detour.dx + diry * m.detour.dy < 0.5) m.detour = null;
+  if (m.detour && (dirx !== 0 || diry !== 0)) m.detour = null;
   if (m.detour) {
     const bx = m.x;
     const by = m.y;

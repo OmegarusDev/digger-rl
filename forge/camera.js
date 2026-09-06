@@ -209,7 +209,7 @@ export class WorldCamera {
       this._anchor = null;
       this._deriv = null;
     }
-    const followT = 1 - Math.pow(1 - 0.14, dt * 60);
+    const followT = 1 - Math.pow(1 - 0.28, dt * 60);
     const zoomT = 1 - Math.pow(1 - 0.1, dt * 60);
     this.x = lerp(this.x, this.targetX, followT);
     this.y = lerp(this.y, this.targetY, followT);
