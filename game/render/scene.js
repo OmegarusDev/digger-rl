@@ -1,11 +1,10 @@
-import { drawFlora, floraShadowSpec } from "./flora.js";
-import { drawBuilding, drawGhost, buildingShadowSpec } from "./buildings.js";
-import { drawFounder, drawCamp, drawFireGlow, campShadowSpecs, founderShadowSpec } from "./camp.js";
-import { drawVillager, villagerShadowSpec } from "./villager.js";
-import { drawDeer, drawTrap, deerShadowSpec } from "./fauna.js";
+import { drawFlora } from "./flora.js";
+import { drawBuilding, drawGhost } from "./buildings.js";
+import { drawFounder, drawCamp, drawFireGlow } from "./camp.js";
+import { drawVillager } from "./villager.js";
+import { drawDeer, drawTrap } from "./fauna.js";
 import { drawField, drawFieldGhost } from "./fields.js";
-import { castSilhouette, beginShadowFrame, endShadowFrame } from "../../forge/shadows.js";
-import { sunState, shadowParams } from "../../forge/sun.js";
+import { sunState } from "../../forge/sun.js";
 import { withAlpha } from "../../forge/draw.js";
 import { WORK_RANGE } from "../sim/founder.js";
 
@@ -14,7 +13,6 @@ const vig = { cache: "", fill: null };
 export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {}) {
   const state = sim.state;
   const sun = sunState(state.time);
-  const sp = shadowParams(sun);
   cam.begin(ctx);
   try {
     terrainRenderer(ctx, cam);
@@ -47,19 +45,6 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
       drawList.push({ y: v.y, villager: v });
     }
     drawList.push({ y: state.founder.y, founder: true });
-
-    if (sp.on) {
-      beginShadowFrame();
-      for (const cs of campShadowSpecs(P, state)) castSilhouette(ctx, cam, sp, cs);
-      for (const e of drawList) {
-        if (e.founder) castSilhouette(ctx, cam, sp, founderShadowSpec(P, state.founder));
-        else if (e.villager) castSilhouette(ctx, cam, sp, villagerShadowSpec(P, e.villager));
-        else if (e.deer) castSilhouette(ctx, cam, sp, deerShadowSpec(P, e.deer));
-        else if (e.bd) castSilhouette(ctx, cam, sp, buildingShadowSpec(P, e.bd, t));
-        else if (e.item) castSilhouette(ctx, cam, sp, floraShadowSpec(P, e.item));
-      }
-      endShadowFrame(ctx);
-    }
 
     drawCamp(ctx, cam, P, state, t, sun);
 

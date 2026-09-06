@@ -18,7 +18,6 @@ import { GOODS } from "./game/data/goods.js";
 import { BUILDINGS } from "./game/data/buildings.js";
 import { makeTerrainSampler } from "./game/render/terrainModel.js";
 import { renderScene } from "./game/render/scene.js";
-import { getShadowStats } from "./forge/shadows.js";
 import { createHud } from "./game/ui/hud.js";
 import { createBuildBar } from "./game/ui/buildbar.js";
 import { createInfoPanel } from "./game/ui/panel.js";
@@ -168,15 +167,6 @@ window.__game = {
     return terrain.done;
   },
   lastError: null,
-  _shadowSil: 0,
-  _shadowBlob: 0,
-  _frameMs: 0,
-  get shadowStats() {
-    return { silhouettes: window.__game._shadowSil, blobs: window.__game._shadowBlob };
-  },
-  get frameMs() {
-    return window.__game._frameMs;
-  },
 };
 
 let follow = true;
@@ -351,13 +341,8 @@ function frameInner(dt) {
 
   if (follow && !(placing && input.dragging)) cam.follow(f.x, f.y);
   cam.tick(dt);
-  const frameStart = performance.now();
   cam.clear(ctx, "#0f130a");
   renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost, ghostField, selected });
-  const ss = getShadowStats();
-  window.__game._shadowSil = ss.silhouettes;
-  window.__game._shadowBlob = ss.blobs;
-  window.__game._frameMs = (performance.now() - frameStart).toFixed(1);
   canvas.classList.toggle("placing", !!placing);
   buildbar.refresh(sim.state.stores);
   panel.update(sim.state, placing ? { type: "placing", kind: placing } : selected, f);

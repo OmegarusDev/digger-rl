@@ -2,39 +2,17 @@ import { drawVisual } from "../../forge/visuals.js";
 import { withAlpha, drawLabel } from "../../forge/draw.js";
 import { BUILDINGS, SITE_POSTS } from "../data/buildings.js";
 
-export function buildingShadowSpec(P, b, t) {
-  const def = BUILDINGS[b.kind];
-  const site = b.state === "site";
-  const k = `${b.kind}:${site ? 1 : 0}:${b.storageLvl ?? 0}:${def.sails ? Math.floor(t * 4) : ""}`;
-  let s = b._ss;
-  if (!s || s._k !== k) {
-    s = {
-      _k: k,
-      x: b.x,
-      y: b.y,
-      fp: site ? 0.42 : 0.6,
-      h: site ? 0.45 : def.sails ? 1.38 : 0.92,
-      key: `bld:${k}`,
-      alpha: site ? 0.8 : 1,
-      draw: (g, m) => {
-        const p = m.project(b.x, b.y);
-        const sc = m.scale * p.s;
-        drawVisual(g, m.V, site ? SITE_POSTS : def.visual, p.x, p.y, sc, P.building);
-        if (!site && def.sails) drawSails(g, m.V, p, sc, t);
-      },
-    };
-    b._ss = s;
-  }
-  s.x = b.x;
-  s.y = b.y;
-  return s;
-}
-
 export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
   const p = cam.project(b.x, b.y);
   if (p.y < -140 || p.y > cam.screenH + 140 || p.x < -140 || p.x > cam.screenW + 140) return;
   const s = cam.scale * p.s;
   const def = BUILDINGS[b.kind];
+
+  const sr = (b.state === "site" ? 0.42 : 0.58) * s;
+  ctx.fillStyle = "rgba(16,18,10,0.32)";
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y, sr, sr * cam.V.deckRatio * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
 
   if (b.state === "site") {
     drawVisual(ctx, cam.V, SITE_POSTS, p.x, p.y, s, P.building);

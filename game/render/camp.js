@@ -21,6 +21,10 @@ export function makeFounderSkin(P) {
 export function drawFounder(ctx, cam, P, founder, sun) {
   const p = cam.project(founder.x, founder.y);
   const skin = makeFounderSkin(P);
+  ctx.fillStyle = "rgba(16,18,10,0.28)";
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y, 0.24 * cam.scale * p.s, 0.24 * cam.scale * p.s * cam.V.deckRatio * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
   drawAgent(
     ctx,
     p,
@@ -44,59 +48,6 @@ export function drawFounder(ctx, cam, P, founder, sun) {
   ctx.ellipse(p.x, p.y + 2 * p.s, 0.34 * cam.scale * p.s, 0.34 * cam.scale * p.s * cam.V.deckRatio, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.lineWidth = 1;
-}
-
-export function campShadowSpecs(P, state) {
-  const c = state.camp;
-  const stash = state._stashSpec ?? (state._stashSpec = {
-    x: 0,
-    y: 0,
-    fp: 0.55,
-    h: 0.62,
-    alpha: 1,
-    key: "",
-    draw: (g, m) => drawStash(g, m, P, state),
-  });
-  const fire = state._fireSpec ?? (state._fireSpec = {
-    x: 0,
-    y: 0,
-    fp: 0.36,
-    h: 0.4,
-    alpha: 0.85,
-    key: "fire",
-    draw: (g, m) => drawFire(g, m, P, state, 0, false),
-  });
-  stash.key = `stash:${Math.min(4, Math.ceil(state.stores.log / 6))}`;
-  stash.x = c.x + 1.65;
-  stash.y = c.y + 0.1;
-  fire.x = c.x - 0.4;
-  fire.y = c.y + 1.05;
-  return [stash, fire];
-}
-
-export function founderShadowSpec(P, f) {
-  let s = f._ss;
-  if (!s) {
-    const skin = makeFounderSkin(P);
-    s = {
-      x: f.x,
-      y: f.y,
-      fp: 0.24,
-      h: 0.68,
-      hMul: 1,
-      alpha: 0.92,
-      key: "",
-      draw: (g, m) => {
-        const p = m.project(f.x, f.y);
-        drawAgent(g, p, { moving: f.moving, phase: f.phase, dir: f.dir, action: f.action, swing: f.swing, carry: carryUnits(f.carry), flash: 0 }, skin, m.V, m.scale, null);
-      },
-    };
-    f._ss = s;
-  }
-  s.key = `f:${f.moving ? 1 : 0}:${Math.floor(f.phase * 8)}:${f.action}:${Math.round((f.swing || 0) * 4)}:${carryUnits(f.carry) > 0 ? 1 : 0}`;
-  s.x = f.x;
-  s.y = f.y;
-  return s;
 }
 
 export function drawStash(ctx, cam, P, state) {

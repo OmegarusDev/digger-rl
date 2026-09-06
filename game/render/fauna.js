@@ -12,32 +12,15 @@ const trapDef = [
   ["post", { x: 0.16, y: 0.0, h: 0.12 }],
 ];
 
-export function deerShadowSpec(P, deer) {
-  let s = deer._ss;
-  if (!s) {
-    s = {
-      x: 0,
-      y: 0,
-      fp: 0.32,
-      h: 0.42,
-      alpha: 0.9,
-      key: "deer",
-      draw: (g, m) => {
-        const p = m.project(deer.x, deer.y);
-        drawVisual(g, m.V, deerDef, p.x, p.y, m.scale * p.s, P.flora);
-      },
-    };
-    deer._ss = s;
-  }
-  s.x = deer.x;
-  s.y = deer.y;
-  return s;
-}
-
 export function drawDeer(ctx, cam, P, deer, sun) {
   const p = cam.project(deer.x, deer.y);
   void sun;
-  drawVisual(ctx, cam.V, deerDef, p.x, p.y, cam.scale * p.s, P.flora);
+  const s = cam.scale * p.s;
+  ctx.fillStyle = "rgba(16,18,10,0.26)";
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y, 0.32 * s, 0.32 * s * cam.V.deckRatio * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  drawVisual(ctx, cam.V, deerDef, p.x, p.y, s, P.flora);
   if (deer.flash > 0) {
     ctx.fillStyle = `rgba(255,255,255,${(deer.flash * 1.5).toFixed(2)})`;
     ctx.beginPath();
