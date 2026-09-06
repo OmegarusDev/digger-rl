@@ -1,5 +1,6 @@
 import { drawVisual } from "../../forge/visuals.js";
 import { drawSunShadow } from "../../forge/sun.js";
+import { settings } from "../settings.js";
 
 const defCache = new Map();
 
@@ -101,7 +102,7 @@ export function drawFlora(ctx, cam, P, item, t, sun) {
   const shape = SHAPES[kind] || SHAPES.bush;
 
   if (item.state !== "falling") {
-    drawSunShadow(ctx, cam, sun, item.x, item.y, shape.fp, shape.h * item.scale);
+    drawSunShadow(ctx, cam, sun, item.x, item.y, shape.fp, shape.h * item.scale, 0.26, settings.shadows);
   }
 
   const alive = item.state === "alive";

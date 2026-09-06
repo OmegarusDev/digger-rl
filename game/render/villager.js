@@ -1,6 +1,7 @@
 import { drawAgent } from "../../forge/agents.js";
 import { KINDS } from "../data/villagers.js";
 import { carryUnits } from "../data/goods.js";
+import { settings } from "../settings.js";
 
 export function makeVillagerSkin(P, v) {
   const kind = KINDS[v.kind];
@@ -36,6 +37,7 @@ export function drawVillager(ctx, cam, P, v, sun) {
     makeVillagerSkin(P, v),
     cam.V,
     cam.scale * kind.scale,
-    sun
+    sun,
+    settings.shadows
   );
 }

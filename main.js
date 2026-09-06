@@ -23,7 +23,7 @@ import { createBuildBar } from "./game/ui/buildbar.js";
 import { createInfoPanel } from "./game/ui/panel.js";
 import { createSplash } from "./game/ui/splash.js";
 import { createPauseMenu } from "./game/ui/pausemenu.js";
-import { saveGame, loadSave, deleteSave } from "./game/save.js";
+import { saveGame, loadSave } from "./game/save.js";
 import { callVillager, bonfireUpgrade } from "./game/sim/camp.js";
 import { buildBed } from "./game/sim/homes.js";
 

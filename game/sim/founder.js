@@ -245,13 +245,6 @@ function doWork(state, dt, wt, t) {
 }
 
 function acquireWork(state, f, range) {
-  const foe = nearestEnemy(state, f, range);
-  if (foe) {
-    f.workTarget = { type: "enemy", id: foe.id };
-    f.action = "attack";
-    f.dir = Math.atan2(foe.y - f.y, foe.x - f.x);
-    return;
-  }
   if (carryTotal(f) >= f.carryMax) {
     handsFull(state, f);
     return;
@@ -286,16 +279,6 @@ function acquireWork(state, f, range) {
   }
   if (best) f.workTarget = best.wt;
   else f.workLatch = false;
-}
-
-function nearestEnemy(state, f, range) {
-  let best = null;
-  for (const e of state.enemies ?? []) {
-    if ((e.hp ?? 1) <= 0) continue;
-    const d = Math.hypot(e.x - f.x, e.y - f.y);
-    if (d <= range && (!best || d < best.d)) best = e;
-  }
-  return best;
 }
 
 export function findFloraNear(state, wx, wy, tol) {

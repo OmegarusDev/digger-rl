@@ -1,5 +1,4 @@
-import { SEASONS } from "../sim/time.js";
-import { clockLabel } from "../sim/time.js";
+import { SEASONS, clockLabel } from "../sim/time.js";
 import { carryUnits } from "../data/goods.js";
 
 export function createHud(root, opts = {}) {

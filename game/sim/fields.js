@@ -1,4 +1,4 @@
-import { CROPS } from "../data/crops.js";
+import { CROPS, STAGE_LABELS } from "../data/crops.js";
 import { GOODS } from "../data/goods.js";
 import { cellKey, floraAtCell } from "./state.js";
 

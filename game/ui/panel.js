@@ -134,7 +134,7 @@ export function createInfoPanel(root, onAction, { P } = {}) {
   }
 
   function agentPreview(skin) {
-    return (g) => drawAgent(g, { x: 28, y: 44, s: 1 }, { moving: false, phase: 0, dir: 0.4, action: "idle", swing: 0, carry: 0, flash: 0 }, skin, PV, 50, null);
+    return (g) => drawAgent(g, { x: 28, y: 44, s: 1 }, { moving: false, phase: 0, dir: 0.4, action: "idle", swing: 0, carry: 0, flash: 0 }, skin, PV, 50, null, false);
   }
 
   function fieldPreview(seeded) {

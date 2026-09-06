@@ -2,6 +2,7 @@ import { drawVisual } from "../../forge/visuals.js";
 import { drawSunShadow } from "../../forge/sun.js";
 import { withAlpha, drawLabel } from "../../forge/draw.js";
 import { BUILDINGS, SITE_POSTS } from "../data/buildings.js";
+import { settings } from "../settings.js";
 
 export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
   const p = cam.project(b.x, b.y);
@@ -10,7 +11,7 @@ export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
   const def = BUILDINGS[b.kind];
 
   if (b.state === "site") {
-    drawSunShadow(ctx, cam, sun, b.x, b.y, 0.4, 0.45, 0.2);
+    drawSunShadow(ctx, cam, sun, b.x, b.y, 0.4, 0.45, 0.2, settings.shadows);
     drawVisual(ctx, cam.V, SITE_POSTS, p.x, p.y, s, P.building);
     const w = 0.7 * s;
     const frac = b.work / b.maxWork;
@@ -25,7 +26,7 @@ export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
     return;
   }
 
-  drawSunShadow(ctx, cam, sun, b.x, b.y, 0.58, 0.85, 0.28);
+  drawSunShadow(ctx, cam, sun, b.x, b.y, 0.58, 0.85, 0.28, settings.shadows);
   drawVisual(ctx, cam.V, def.visual, p.x, p.y, s, P.building);
   if (def.sails) drawSails(ctx, cam.V, p, s, t);
   if (hover) {
@@ -84,6 +85,4 @@ export function drawGhost(ctx, cam, P, kind, wx, wy, valid) {
   ctx.ellipse(p.x, p.y, 0.55 * s, 0.55 * s * cam.V.deckRatio, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.lineWidth = 1;
-  const q = [p.x - 0.5 * s, p.y - 0.5 * s * cam.V.deckRatio * 2];
-  void q;
 }

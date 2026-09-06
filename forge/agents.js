@@ -1,6 +1,4 @@
-import { settings } from "../game/settings.js";
-
-export function drawAgent(ctx, p, a, skin, V, unit, sun) {
+export function drawAgent(ctx, p, a, skin, V, unit, sun, shadows = true) {
   const s = p.s;
   const u = unit * s;
   const x = p.x;
@@ -10,7 +8,7 @@ export function drawAgent(ctx, p, a, skin, V, unit, sun) {
   const face = Math.cos(a.dir) < 0 ? -1 : 1;
   const legSwing = a.moving ? Math.sin(a.phase * Math.PI * 2) * 0.09 * u : 0;
 
-  if (settings.shadows && sun && sun.day > 0.03) {
+  if (shadows && sun && sun.day > 0.03) {
     const len = Math.min(0.7, Math.max(0.25, 0.55 / Math.max(0.22, sun.alt))) * u;
     const dirx = -Math.cos(sun.az);
     const diry = -Math.sin(sun.az) * 0.9;

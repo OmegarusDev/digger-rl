@@ -3,6 +3,7 @@ import { mats, withAlpha } from "../../forge/draw.js";
 import { drawAgent } from "../../forge/agents.js";
 import { drawSunShadow } from "../../forge/sun.js";
 import { carryUnits } from "../data/goods.js";
+import { settings } from "../settings.js";
 
 export function makeFounderSkin(P) {
   return {
@@ -37,7 +38,8 @@ export function drawFounder(ctx, cam, P, founder, sun) {
     skin,
     cam.V,
     cam.scale,
-    sun
+    sun,
+    settings.shadows
   );
   ctx.strokeStyle = withAlpha(P.ui.accent, 0.35);
   ctx.lineWidth = 1.5;
@@ -126,8 +128,8 @@ export function drawFire(ctx, cam, P, state, t, flames = true) {
 }
 
 export function drawCamp(ctx, cam, P, state, t, sun) {
-  drawSunShadow(ctx, cam, sun, state.camp.x + 1.65, state.camp.y + 0.1, 0.55, 0.62);
-  drawSunShadow(ctx, cam, sun, state.camp.x - 0.4, state.camp.y + 1.05, 0.36, 0.3);
+  drawSunShadow(ctx, cam, sun, state.camp.x + 1.65, state.camp.y + 0.1, 0.55, 0.62, 0.26, settings.shadows);
+  drawSunShadow(ctx, cam, sun, state.camp.x - 0.4, state.camp.y + 1.05, 0.36, 0.3, 0.26, settings.shadows);
   drawStash(ctx, cam, P, state);
   drawFire(ctx, cam, P, state, t);
 }
