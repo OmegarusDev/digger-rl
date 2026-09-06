@@ -1,4 +1,5 @@
 import { drawVisual } from "../../forge/visuals.js";
+import { drawSunShadow } from "../../forge/sun.js";
 import { withAlpha, drawLabel } from "../../forge/draw.js";
 import { BUILDINGS, SITE_POSTS } from "../data/buildings.js";
 
@@ -8,13 +9,8 @@ export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
   const s = cam.scale * p.s;
   const def = BUILDINGS[b.kind];
 
-  const sr = (b.state === "site" ? 0.42 : 0.58) * s;
-  ctx.fillStyle = "rgba(16,18,10,0.32)";
-  ctx.beginPath();
-  ctx.ellipse(p.x, p.y, sr, sr * cam.V.deckRatio * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
   if (b.state === "site") {
+    drawSunShadow(ctx, cam, sun, b.x, b.y, 0.4, 0.45, 0.2);
     drawVisual(ctx, cam.V, SITE_POSTS, p.x, p.y, s, P.building);
     const w = 0.7 * s;
     const frac = b.work / b.maxWork;
@@ -29,6 +25,7 @@ export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
     return;
   }
 
+  drawSunShadow(ctx, cam, sun, b.x, b.y, 0.58, 0.85, 0.28);
   drawVisual(ctx, cam.V, def.visual, p.x, p.y, s, P.building);
   if (def.sails) drawSails(ctx, cam.V, p, s, t);
   if (hover) {

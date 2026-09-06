@@ -21,11 +21,6 @@ export function makeVillagerSkin(P, v) {
 export function drawVillager(ctx, cam, P, v, sun) {
   const p = cam.project(v.x, v.y);
   const kind = KINDS[v.kind];
-  const s = cam.scale * kind.scale * p.s;
-  ctx.fillStyle = "rgba(16,18,10,0.28)";
-  ctx.beginPath();
-  ctx.ellipse(p.x, p.y, 0.24 * s, 0.24 * s * cam.V.deckRatio * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
   drawAgent(
     ctx,
     p,

@@ -1,4 +1,5 @@
 import { drawVisual } from "../../forge/visuals.js";
+import { drawSunShadow } from "../../forge/sun.js";
 
 const defCache = new Map();
 
@@ -90,19 +91,18 @@ export function floraVisual(item, alive) {
   }
 }
 
-export function floraShadowSpec() { return null; }
-
 export function drawFlora(ctx, cam, P, item, t, sun) {
   const p = cam.project(item.x, item.y);
   if (p.y < -160 || p.y > cam.screenH + 160 || p.x < -160 || p.x > cam.screenW + 160) return;
   const scale = item.scale * cam.scale * p.s;
 
-  const shape = SHAPES[item.state === "stump" ? "stump" : item.kind] || SHAPES.bush;
-  const sr = shape.fp * scale * 0.9;
-  ctx.fillStyle = "rgba(16,18,10,0.32)";
-  ctx.beginPath();
-  ctx.ellipse(p.x, p.y, sr, sr * cam.V.deckRatio * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
+  let kind = item.kind;
+  if (item.state === "stump") kind = "stump";
+  const shape = SHAPES[kind] || SHAPES.bush;
+
+  if (item.state !== "falling") {
+    drawSunShadow(ctx, cam, sun, item.x, item.y, shape.fp, shape.h * item.scale);
+  }
 
   const alive = item.state === "alive";
 

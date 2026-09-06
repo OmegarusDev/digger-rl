@@ -31,17 +31,19 @@ export function sunState(time) {
   };
 }
 
-export function shadowParams(sun) {
-  if (sun.day > 0.02) {
-    return {
-      on: true,
-      moon: false,
-      dirx: -Math.cos(sun.az),
-      diry: -Math.sin(sun.az),
-      k: clamp(1 / Math.max(0.22, sun.alt), 0.55, 4.2),
-      alphaMul: (0.45 + 0.55 * sun.day) * clamp01(sun.day * 12),
-      warm: sun.warmth,
-    };
-  }
-  return { on: true, moon: true, dirx: -0.58, diry: -0.5, k: 0.6, alphaMul: 0.12, warm: 0 };
+export function drawSunShadow(ctx, cam, sun, wx, wy, footprint, height, alpha = 0.26) {
+  if (sun.day <= 0.03) return;
+  const p = cam.project(wx, wy);
+  const s = cam.scale * p.s;
+  const len = clamp(height / Math.max(0.22, sun.alt), height * 0.55, height * 4.2) * s;
+  const dirx = -Math.cos(sun.az);
+  const diry = -Math.sin(sun.az) * 0.9;
+  const cx = p.x + dirx * len * 0.45;
+  const cy = p.y + diry * len * 0.45;
+  const rx = len * 0.5 + footprint * s;
+  const ry = Math.max(1.5, rx * 0.38);
+  ctx.fillStyle = `rgba(16,18,10,${(alpha * (0.45 + 0.55 * sun.day)).toFixed(3)})`;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, Math.atan2(diry, dirx), 0, Math.PI * 2);
+  ctx.fill();
 }

@@ -1,6 +1,7 @@
 import { box25 } from "../../forge/prims.js";
 import { mats, withAlpha } from "../../forge/draw.js";
 import { drawAgent } from "../../forge/agents.js";
+import { drawSunShadow } from "../../forge/sun.js";
 import { carryUnits } from "../data/goods.js";
 
 export function makeFounderSkin(P) {
@@ -21,10 +22,6 @@ export function makeFounderSkin(P) {
 export function drawFounder(ctx, cam, P, founder, sun) {
   const p = cam.project(founder.x, founder.y);
   const skin = makeFounderSkin(P);
-  ctx.fillStyle = "rgba(16,18,10,0.28)";
-  ctx.beginPath();
-  ctx.ellipse(p.x, p.y, 0.24 * cam.scale * p.s, 0.24 * cam.scale * p.s * cam.V.deckRatio * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
   drawAgent(
     ctx,
     p,
@@ -129,7 +126,8 @@ export function drawFire(ctx, cam, P, state, t, flames = true) {
 }
 
 export function drawCamp(ctx, cam, P, state, t, sun) {
-  void sun;
+  drawSunShadow(ctx, cam, sun, state.camp.x + 1.65, state.camp.y + 0.1, 0.55, 0.62);
+  drawSunShadow(ctx, cam, sun, state.camp.x - 0.4, state.camp.y + 1.05, 0.36, 0.3);
   drawStash(ctx, cam, P, state);
   drawFire(ctx, cam, P, state, t);
 }
