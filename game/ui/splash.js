@@ -1,9 +1,10 @@
 import { hasSave } from "../save.js";
 
-export function createSplash(root, { seed, onBegin, onContinue }) {
+export function createSplash(root, { seed, onBegin, onContinue, onDismiss }) {
   const wrap = document.createElement("div");
   wrap.className = "title-wrap clickable";
   const existing = hasSave();
+  let wasContinue = false;
   wrap.innerHTML = `
     <div class="title-card">
       <div class="title-brand">FORGE</div>
@@ -35,6 +36,7 @@ export function createSplash(root, { seed, onBegin, onContinue }) {
 
   if (existing) {
     wrap.querySelector("#titleContinue").addEventListener("click", () => {
+      wasContinue = true;
       onContinue?.();
       dismiss();
     });
@@ -44,6 +46,7 @@ export function createSplash(root, { seed, onBegin, onContinue }) {
     wrap.classList.add("title-out");
     setTimeout(() => wrap.remove(), 450);
     onBegin?.();
+    onDismiss?.(wasContinue);
   }
 
   root.appendChild(wrap);

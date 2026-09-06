@@ -72,6 +72,7 @@ sim.state.bus.on("built", (e) => {
   fx.emit("dust", e.x, e.y, { count: 9 });
   fx.emit("pop", e.x, e.y, {});
   cam.shake(1.6);
+  saveGame(sim);
 });
 sim.state.bus.on("saw", (e) => fx.emit("chips", e.x + 0.25, e.y - 0.35, { count: 3 }));
 sim.state.bus.on("pickHit", (e) => fx.emit("leafPuff", e.x, e.y, { count: 3, color: "#b8452f" }));
@@ -88,7 +89,10 @@ sim.state.bus.on("died", (e) => {
   hud.toast(`${e.name} has died`);
   fx.emit("pop", e.x, e.y, {});
 });
-sim.state.bus.on("joined", (e) => hud.toast(`${e.name} has joined the camp`));
+sim.state.bus.on("joined", (e) => {
+  hud.toast(`${e.name} has joined the camp`);
+  saveGame(sim);
+});
 sim.state.bus.on("bonfire", (e) => fx.emit("pop", e.x, e.y, {}));
 
 const input = new Input(canvas);
@@ -157,12 +161,15 @@ const buildbar = createBuildBar(document.getElementById("ui"), { ...BUILDINGS, f
 
 createSplash(document.getElementById("ui"), {
   seed,
-  onBegin: () => hud.toast(`Valley seed ${seed} — WASD moves the founder, SPACE works the nearest thing`),
+  onBegin: () => {},
   onContinue: () => {
     const save = loadSave();
     if (save && save.seed !== seed) {
       location.href = `${location.pathname}?seed=${save.seed}`;
     }
+  },
+  onDismiss: (wasContinue) => {
+    hud.toast(wasContinue ? "Game restored" : `Valley seed ${seed} — WASD moves the founder, SPACE works the nearest thing`);
   },
 });
 
@@ -171,10 +178,6 @@ const pauseMenu = createPauseMenu(document.getElementById("ui"), {
     loop.paused = false;
     hud.setPaused(false);
     pauseMenu.hide();
-  },
-  onSave: () => {
-    saveGame(sim);
-    hud.toast("Game saved");
   },
 });
 
@@ -196,9 +199,19 @@ window.__game = {
 let follow = true;
 let t = 0;
 
+let autosaveT = 0;
+const AUTOSAVE_INTERVAL = 30;
+
 const loop = new GameLoop({
   hz: 60,
-  update: (step) => sim.tick(step),
+  update: (step) => {
+    sim.tick(step);
+    autosaveT += step;
+    if (autosaveT >= AUTOSAVE_INTERVAL) {
+      autosaveT = 0;
+      saveGame(sim);
+    }
+  },
   render: (dt) => frame(dt),
 });
 

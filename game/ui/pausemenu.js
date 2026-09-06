@@ -1,6 +1,6 @@
 import { settings } from "../settings.js";
 
-export function createPauseMenu(root, { onResume, onSave }) {
+export function createPauseMenu(root, { onResume }) {
   const wrap = document.createElement("div");
   wrap.className = "pause-wrap";
 
@@ -27,9 +27,6 @@ export function createPauseMenu(root, { onResume, onSave }) {
   }
 
   menuView.appendChild(btn("Resume", () => onResume()));
-  menuView.appendChild(btn("Save", () => {
-    onSave?.();
-  }));
   menuView.appendChild(btn("Settings", () => {
     menuView.style.display = "none";
     settingsView.style.display = "";
