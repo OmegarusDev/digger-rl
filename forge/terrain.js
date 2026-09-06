@@ -53,7 +53,7 @@ export class SmoothTerrain {
     if (!this.done) return;
 
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    ctx.imageSmoothingQuality = "medium";
 
     const worldToSrc = (w) => clamp((w - this._origin) / st, 0, this.n - 0.001);
 
@@ -71,31 +71,41 @@ export class SmoothTerrain {
     const j1 = Math.min(this.n - 1, Math.ceil((d.y0 + d.K - this._origin) / st) + 1);
     const cxWorld = this._origin + span / 2;
 
-    for (let j = j0; j <= j1; j++) {
-      const wy0 = this._origin + (j - 0.5) * st;
-      const wy1 = wy0 + st;
-      const v0 = (wy0 - d.y0) / d.K;
-      const v1 = (wy1 - d.y0) / d.K;
-      const sMid = f + (1 - f) * ((v0 + v1) / 2);
-      const yTop = cam.screenH * (f * v0 + (1 - f) * v0 * v0 * 0.5) * d.invI1;
-      const yBot = cam.screenH * (f * v1 + (1 - f) * v1 * v1 * 0.5) * d.invI1;
-      if (yBot < -8 || yTop > cam.screenH + 8) continue;
-      const xMid = cam.screenW / 2 + (cxWorld - cam.x) * cam.scale * sMid;
-      const w = span * cam.scale * sMid;
+    const BATCH = 8;
+    let sj = j0;
+    while (sj <= j1) {
+      const wy0a = this._origin + (sj - 0.5) * st;
+      const v0a = (wy0a - d.y0) / d.K;
+      const sMida = f + (1 - f) * v0a;
+      const yTopa = cam.screenH * (f * v0a + (1 - f) * v0a * v0a * 0.5) * d.invI1;
+      const xMida = cam.screenW / 2 + (cxWorld - cam.x) * cam.scale * sMida;
+      const wa = span * cam.scale * sMida;
       const sx0 = clamp(worldToSrc(viewX0), 0, this.n);
       const sx1 = clamp(worldToSrc(viewX1), 0, this.n);
       const sw = Math.max(1, sx1 - sx0);
+
+      let ej = Math.min(sj + BATCH, j1);
+      const wy1b = this._origin + (ej + 0.5) * st;
+      const v1b = (wy1b - d.y0) / d.K;
+      const yBotb = cam.screenH * (f * v1b + (1 - f) * v1b * v1b * 0.5) * d.invI1;
+
+      if (yBotb < -8 || yTopa > cam.screenH + 8) {
+        sj = ej + 1;
+        continue;
+      }
+
       ctx.drawImage(
         this._master,
         sx0,
-        j,
+        sj,
         sw,
-        1,
-        xMid - w / 2 + (sx0 / this.n) * w,
-        yTop,
-        (sw / this.n) * w,
-        yBot - yTop + 1
+        ej - sj + 1,
+        xMida - wa / 2 + (sx0 / this.n) * wa,
+        yTopa,
+        (sw / this.n) * wa,
+        yBotb - yTopa + 1
       );
+      sj = ej + 1;
     }
   }
 }
