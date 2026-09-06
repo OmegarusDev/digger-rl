@@ -1,4 +1,4 @@
-import { createState } from "./state.js";
+import { createState, indexFlora, buildWalkable } from "./state.js";
 import { createFounder, updateFounder } from "./founder.js";
 import { advanceTime } from "./time.js";
 import { updateVillager, feedAllVillagers } from "./villager.js";
@@ -35,7 +35,15 @@ export function createSim(seed) {
 
   function loadState(saved) {
     for (const k of Object.keys(saved)) {
-      if (k !== "bus" && k !== "rng") state[k] = saved[k];
+      if (k === "bus" || k === "rng" || k === "floraMap" || k === "walk" || k === "buildingMap") continue;
+      state[k] = saved[k];
+    }
+    state.floraMap = new Map();
+    state.buildingMap = new Map();
+    indexFlora(state);
+    buildWalkable(state);
+    for (const b of state.buildings) {
+      state.buildingMap.set(((Math.floor(b.y) * 512) + Math.floor(b.x)), b.id);
     }
   }
 
