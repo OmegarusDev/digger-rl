@@ -23,6 +23,7 @@ import { createBuildBar } from "./game/ui/buildbar.js";
 import { createInfoPanel } from "./game/ui/panel.js";
 import { createSplash } from "./game/ui/splash.js";
 import { createPauseMenu } from "./game/ui/pausemenu.js";
+import { saveGame, loadSave, deleteSave } from "./game/save.js";
 import { callVillager, bonfireUpgrade } from "./game/sim/camp.js";
 import { buildBed } from "./game/sim/homes.js";
 
@@ -31,6 +32,10 @@ const seedParam = Number(params.get("seed"));
 const seed = Number.isFinite(seedParam) && seedParam > 0 ? seedParam : (Math.random() * 1e9) | 0;
 
 const sim = createSim(seed);
+const saveData = loadSave();
+if (saveData && saveData.seed === seed && saveData.state) {
+  sim.loadState(saveData.state);
+}
 const P = makePalette();
 const canvas = document.getElementById("game");
 const cam = new WorldCamera(canvas, {
@@ -153,6 +158,12 @@ const buildbar = createBuildBar(document.getElementById("ui"), { ...BUILDINGS, f
 createSplash(document.getElementById("ui"), {
   seed,
   onBegin: () => hud.toast(`Valley seed ${seed} — WASD moves the founder, SPACE works the nearest thing`),
+  onContinue: () => {
+    const save = loadSave();
+    if (save && save.seed !== seed) {
+      location.href = `${location.pathname}?seed=${save.seed}`;
+    }
+  },
 });
 
 const pauseMenu = createPauseMenu(document.getElementById("ui"), {
@@ -160,6 +171,10 @@ const pauseMenu = createPauseMenu(document.getElementById("ui"), {
     loop.paused = false;
     hud.setPaused(false);
     pauseMenu.hide();
+  },
+  onSave: () => {
+    saveGame(sim);
+    hud.toast("Game saved");
   },
 });
 

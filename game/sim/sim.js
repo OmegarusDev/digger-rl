@@ -32,7 +32,13 @@ export function createSim(seed) {
     state.tick++;
   }
 
-  return { state, tick, hz: TICK_HZ };
+  function loadState(saved) {
+    for (const k of Object.keys(saved)) {
+      if (k !== "bus" && k !== "rng") state[k] = saved[k];
+    }
+  }
+
+  return { state, tick, loadState, hz: TICK_HZ };
 }
 
 function updateFlora(state, dt) {

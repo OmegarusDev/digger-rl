@@ -1,18 +1,22 @@
-export function createSplash(root, { seed, onBegin }) {
+import { hasSave } from "../save.js";
+
+export function createSplash(root, { seed, onBegin, onContinue }) {
   const wrap = document.createElement("div");
   wrap.className = "title-wrap clickable";
+  const existing = hasSave();
   wrap.innerHTML = `
     <div class="title-card">
       <div class="title-brand">FORGE</div>
       <h1 class="title-name">TRUE&nbsp;LEVELLERS</h1>
       <div class="title-sub">a medieval village roguelite</div>
       <div class="title-rule"></div>
+      ${existing ? '<button type="button" class="title-btn pause-btn-row" id="titleContinue">Continue</button>' : ""}
       <form class="title-form" id="titleForm">
         <label class="title-label" for="titleSeed">valley seed</label>
         <input id="titleSeed" type="number" value="${seed}" min="1" max="999999999" />
-        <button type="submit" class="title-btn">Found the Village</button>
+        <button type="submit" class="title-btn">New Game</button>
       </form>
-      <div class="title-quote">“The earth is a common treasury for all.”</div>
+      <div class="title-quote">"The earth is a common treasury for all."</div>
       <div class="title-credit">— Gerrard Winstanley, 1649</div>
     </div>
   `;
@@ -28,6 +32,13 @@ export function createSplash(root, { seed, onBegin }) {
     }
     dismiss();
   });
+
+  if (existing) {
+    wrap.querySelector("#titleContinue").addEventListener("click", () => {
+      onContinue?.();
+      dismiss();
+    });
+  }
 
   function dismiss() {
     wrap.classList.add("title-out");

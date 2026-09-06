@@ -195,6 +195,10 @@ html, body {
   transform-origin: 50% 50%;
   animation: ruleIn 0.7s 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
+.pause-btn-row {
+  display: block;
+  margin: 0 auto 14px;
+}
 
 @keyframes ruleIn {
   from { transform: scaleX(0); opacity: 0; }
@@ -514,7 +518,6 @@ input:focus-visible {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
-  z-index: 10;
 }
 .pause-wrap.on {
   opacity: 1;
