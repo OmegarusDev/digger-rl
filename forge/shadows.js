@@ -33,16 +33,17 @@ function getEntry(key, w, h) {
   return e;
 }
 
-const shimV = { pitchDeg: 26, deckRatio: 0.48, vExag: 1, farScale: 1, shadowSkew: 1 };
-const shim = {
-  scale: 72,
-  V: shimV,
-  screenW: 1e6,
-  screenH: 1e6,
-  project(wx, wy) {
-    return { x: shim._ax + (wx - shim._sx) * 72, y: shim._ay + (wy - shim._sy) * 72, s: 1, v: 0.45 };
-  },
-};
+function makeShim(spec, ax, ay, rs, camV) {
+  return {
+    scale: rs,
+    V: camV,
+    screenW: 1e6,
+    screenH: 1e6,
+    project(wx, wy) {
+      return { x: ax + (wx - spec.x) * rs, y: ay + (wy - spec.y) * rs, s: 1, v: 0.45 };
+    },
+  };
+}
 
 const BLOB_COUNT = 256;
 const blobPool = { cx: new Float64Array(BLOB_COUNT), cy: new Float64Array(BLOB_COUNT), rx: new Float64Array(BLOB_COUNT), ry: new Float64Array(BLOB_COUNT), angle: new Float64Array(BLOB_COUNT), alpha: new Float64Array(BLOB_COUNT), n: 0 };
@@ -124,12 +125,7 @@ export function castSilhouette(ctx, cam, sp, spec) {
     const g = e.cnv.getContext("2d");
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, w, h);
-    g.imageSmoothingEnabled = false;
-    shim._ax = ax;
-    shim._ay = ay;
-    shim._sx = spec.x;
-    shim._sy = spec.y;
-    spec.draw(g, shim);
+    spec.draw(g, makeShim(spec, ax, ay, rs, cam.V));
     g.globalCompositeOperation = "source-in";
     g.fillStyle = TINT;
     g.fillRect(0, 0, w, h);
@@ -142,7 +138,6 @@ export function castSilhouette(ctx, cam, sp, spec) {
   const d = q - diry * k1;
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.imageSmoothingEnabled = false;
   ctx.transform(q, 0, c, d, A.ax - q * ax - c * ay, A.ay - d * ay);
   ctx.drawImage(e.cnv, 0, 0);
   ctx.restore();
