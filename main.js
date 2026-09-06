@@ -244,7 +244,6 @@ function frame(dt) {
 
 function frameInner(dt) {
   t += dt;
-  if (!terrain.done) terrain.bakeChunk(64);
   const ctx = canvas.getContext("2d");
   const io = input.consumeOneShots();
   const f = sim.state.founder;
@@ -421,4 +420,5 @@ function rectTiles(ax, ay, bx, by) {
   return tiles;
 }
 
+while (!terrain.done) terrain.bakeChunk(256);
 loop.start();
