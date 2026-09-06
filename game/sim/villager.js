@@ -58,7 +58,21 @@ export function professionLabel(v) {
   return prof ? PROFESSIONS[prof].label : "Unemployed";
 }
 
-export function feedVillager(state, v) {
+export function feedAllVillagers(state) {
+  const children = [];
+  const workers = [];
+  const rest = [];
+  for (const v of state.villagers) {
+    if (v.kind === "child" || v.kind === "infant") children.push(v);
+    else if (v.workplace) workers.push(v);
+    else rest.push(v);
+  }
+  for (const v of children) feedVillager(state, v);
+  for (const v of workers) feedVillager(state, v);
+  for (const v of rest) feedVillager(state, v);
+}
+
+function feedVillager(state, v) {
   if (v.lastDay === state.time.day) return;
   v.lastDay = state.time.day;
   v.meals = Math.max(0, v.meals - 1);

@@ -20,7 +20,7 @@ export const DEPOSIT_AS = {
   stoneBlock: "stoneBlock",
 };
 
-export const DEPOSIT_VALUE = { food: 1, bread: 3 };
+export const DEPOSIT_VALUE = { food: 1, bread: 1 };
 
 export const FLORA_YIELD = {
   tree: { good: "log", n: 3 },

@@ -120,7 +120,7 @@ export const BUILDINGS = {
     job: "miller",
     slots: [1, 2, 2],
     storage: { grain: 8, flour: 8 },
-    recipe: { in: { grain: 2 }, out: { flour: 1 }, swings: 4 },
+    recipe: { in: { grain: 1 }, out: { flour: 1 }, swings: 4 },
     sails: true,
     visual: [
       ["frustum", { rxBot: 0.42, rxTop: 0.3, h: 0.78, top: "canvasHi", side: "canvas", dark: "canvasDark" }],
@@ -135,8 +135,8 @@ export const BUILDINGS = {
     work: 16,
     job: "baker",
     slots: [1, 2, 2],
-    storage: { flour: 8, bread: 8 },
-    recipe: { in: { flour: 1 }, out: { bread: 1 }, swings: 4 },
+    storage: { flour: 8, bread: 12 },
+    recipe: { in: { flour: 1 }, out: { bread: 3 }, swings: 4 },
     visual: [
       ["box", { w: 0.8, d: 0.66, h: 0.42, top: "canvasHi", side: "canvas", dark: "canvasDark" }],
       ["roof", { y: 0.42, w: 0.96, d: 0.8, h: 0.34, c: "roof", top: "roofDark", gable: "woodDark" }],

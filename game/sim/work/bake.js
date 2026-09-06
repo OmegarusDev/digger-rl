@@ -3,7 +3,7 @@ import { walkTask, swingTask, buildingWorkSpot, runCampRun, depositIntoBuilding 
 import { hasInputs, outputRoom, consumeInputs, produceOutputs, takeFromBuilding, storageCount } from "../storage.js";
 import { buildingById } from "../state.js";
 
-const RECIPE = { in: { flour: 1 }, out: { bread: 1 }, swings: 4 };
+const RECIPE = { in: { flour: 1 }, out: { bread: 3 }, swings: 4 };
 
 export function scan(state, v, b) {
   if (carryUnits(v.carry) > 0) {
@@ -14,7 +14,7 @@ export function scan(state, v, b) {
   if (hasInputs(b, RECIPE) && outputRoom(b, RECIPE)) return { kind: "refine", swings: 0, claims: [] };
   if (storageCount(b, "flour") < 1) {
     const mill = state.buildings.find((bb) => bb.kind === "mill" && bb.state === "built" && storageCount(bb, "flour") >= 1);
-    if (mill) return { kind: "fetch", fromId: mill.id, good: "flour", n: 2, phase: 0, claims: [] };
+    if (mill) return { kind: "fetch", fromId: mill.id, good: "flour", n: 1, phase: 0, claims: [] };
   }
   return null;
 }

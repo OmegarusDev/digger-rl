@@ -3,14 +3,14 @@ import { walkTask, swingTask, buildingWorkSpot, depositIntoBuilding } from "./co
 import { hasInputs, outputRoom, consumeInputs, produceOutputs, takeFromBuilding, storageCount } from "../storage.js";
 import { buildingById } from "../state.js";
 
-const RECIPE = { in: { grain: 2 }, out: { flour: 1 }, swings: 4 };
+const RECIPE = { in: { grain: 1 }, out: { flour: 1 }, swings: 4 };
 
 export function scan(state, v, b) {
   if (carryUnits(v.carry) > 0) return { kind: "store", claims: [] };
   if (hasInputs(b, RECIPE) && outputRoom(b, RECIPE)) return { kind: "refine", swings: 0, claims: [] };
-  if (storageCount(b, "grain") < 2) {
-    const barn = state.buildings.find((bb) => bb.kind === "barn" && bb.state === "built" && storageCount(bb, "grain") >= 2);
-    if (barn) return { kind: "fetch", fromId: barn.id, good: "grain", n: 2, phase: 0, claims: [] };
+  if (storageCount(b, "grain") < 1) {
+    const barn = state.buildings.find((bb) => bb.kind === "barn" && bb.state === "built" && storageCount(bb, "grain") >= 1);
+    if (barn) return { kind: "fetch", fromId: barn.id, good: "grain", n: 1, phase: 0, claims: [] };
   }
   return null;
 }
