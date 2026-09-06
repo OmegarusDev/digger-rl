@@ -23,7 +23,7 @@ import { createBuildBar } from "./game/ui/buildbar.js";
 import { createInfoPanel } from "./game/ui/panel.js";
 import { createSplash } from "./game/ui/splash.js";
 import { createPauseMenu } from "./game/ui/pausemenu.js";
-import { saveGame, loadSave } from "./game/save.js";
+import { saveGame, loadSave, deleteSave } from "./game/save.js";
 import { callVillager, bonfireUpgrade } from "./game/sim/camp.js";
 import { buildBed } from "./game/sim/homes.js";
 
@@ -161,7 +161,6 @@ const buildbar = createBuildBar(document.getElementById("ui"), { ...BUILDINGS, f
 
 createSplash(document.getElementById("ui"), {
   seed,
-  onBegin: () => {},
   onContinue: () => {
     const save = loadSave();
     if (save && save.seed !== seed) {
@@ -181,8 +180,8 @@ const pauseMenu = createPauseMenu(document.getElementById("ui"), {
   },
   onMainMenu: () => {
     loop.paused = true;
-    saveGame(sim);
-    location.reload();
+    deleteSave();
+    location.href = location.pathname;
   },
 });
 

@@ -1,6 +1,6 @@
-import { hasSave } from "../save.js";
+import { hasSave, deleteSave } from "../save.js";
 
-export function createSplash(root, { seed, onBegin, onContinue, onDismiss }) {
+export function createSplash(root, { seed, onContinue, onDismiss }) {
   const wrap = document.createElement("div");
   wrap.className = "title-wrap clickable";
   const existing = hasSave();
@@ -26,12 +26,9 @@ export function createSplash(root, { seed, onBegin, onContinue, onDismiss }) {
   const input = wrap.querySelector("#titleSeed");
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const s = Math.max(1, Math.floor(Number(input.value) || seed));
-    if (s !== seed) {
-      location.href = `${location.pathname}?seed=${s}`;
-      return;
-    }
-    dismiss();
+    const s = Math.max(1, Math.floor(Number(input.value) || 0));
+    deleteSave();
+    location.href = s ? `${location.pathname}?seed=${s}` : location.pathname;
   });
 
   if (existing) {
@@ -45,7 +42,6 @@ export function createSplash(root, { seed, onBegin, onContinue, onDismiss }) {
   function dismiss() {
     wrap.classList.add("title-out");
     setTimeout(() => wrap.remove(), 450);
-    onBegin?.();
     onDismiss?.(wasContinue);
   }
 
