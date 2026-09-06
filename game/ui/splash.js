@@ -27,8 +27,13 @@ export function createSplash(root, { seed, onContinue, onDismiss }) {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const s = Math.max(1, Math.floor(Number(input.value) || 0));
+    if (s !== seed) {
+      deleteSave();
+      location.href = `${location.pathname}?seed=${s}`;
+      return;
+    }
     deleteSave();
-    location.href = s ? `${location.pathname}?seed=${s}` : location.pathname;
+    dismiss();
   });
 
   if (existing) {
@@ -46,5 +51,11 @@ export function createSplash(root, { seed, onContinue, onDismiss }) {
   }
 
   root.appendChild(wrap);
+
+  if (!existing) {
+    deleteSave();
+    dismiss();
+  }
+
   return { dismiss };
 }
