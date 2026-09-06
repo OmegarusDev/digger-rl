@@ -1,4 +1,5 @@
 import { clamp } from "./rng.js";
+import { settings } from "../game/settings.js";
 
 const SEASON_SUN = [
   { dayFrac: 0.52, noon: 0.85 },
@@ -32,7 +33,7 @@ export function sunState(time) {
 }
 
 export function drawSunShadow(ctx, cam, sun, wx, wy, footprint, height, alpha = 0.26) {
-  if (sun.day <= 0.03) return;
+  if (!settings.shadows || sun.day <= 0.03) return;
   const p = cam.project(wx, wy);
   const s = cam.scale * p.s;
   const len = clamp(height / Math.max(0.22, sun.alt), height * 0.55, height * 4.2) * s;

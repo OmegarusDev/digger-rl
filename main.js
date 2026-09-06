@@ -22,6 +22,7 @@ import { createHud } from "./game/ui/hud.js";
 import { createBuildBar } from "./game/ui/buildbar.js";
 import { createInfoPanel } from "./game/ui/panel.js";
 import { createSplash } from "./game/ui/splash.js";
+import { createPauseMenu } from "./game/ui/pausemenu.js";
 import { callVillager, bonfireUpgrade } from "./game/sim/camp.js";
 import { buildBed } from "./game/sim/homes.js";
 
@@ -154,6 +155,14 @@ createSplash(document.getElementById("ui"), {
   onBegin: () => hud.toast(`Valley seed ${seed} — WASD moves the founder, SPACE works the nearest thing`),
 });
 
+const pauseMenu = createPauseMenu(document.getElementById("ui"), {
+  onResume: () => {
+    loop.paused = false;
+    hud.setPaused(false);
+    pauseMenu.hide();
+  },
+});
+
 window.__game = {
   sim,
   cam,
@@ -209,6 +218,7 @@ function frameInner(dt) {
     if (k === "KeyP") {
       loop.paused = !loop.paused;
       hud.setPaused(loop.paused);
+      if (loop.paused) pauseMenu.show(); else pauseMenu.hide();
     }     else if (k === "Digit1") setSpeed(0);
     else if (k === "Digit2") setSpeed(1);
     else if (k === "Digit3") setSpeed(2);
@@ -235,11 +245,24 @@ function frameInner(dt) {
         f.workLatch = true;
       }
     } else if (k === "Escape" || k === "RightClick") {
-      placing = null;
-      fieldDrag = null;
-      selected = null;
-      buildbar.setActive(null);
-      buildbar.close();
+      if (pauseMenu.isOpen) {
+        loop.paused = false;
+        hud.setPaused(false);
+        pauseMenu.hide();
+      } else if (loop.paused) {
+        loop.paused = false;
+        hud.setPaused(false);
+      } else if (placing || selected || fieldDrag) {
+        placing = null;
+        fieldDrag = null;
+        selected = null;
+        buildbar.setActive(null);
+        buildbar.close();
+      } else {
+        loop.paused = true;
+        hud.setPaused(true);
+        pauseMenu.show();
+      }
     } else if (k === "KeyR" && placing === "field") {
       placing = null;
       fieldDrag = null;
