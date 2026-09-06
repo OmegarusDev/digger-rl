@@ -159,7 +159,7 @@ const buildbar = createBuildBar(document.getElementById("ui"), { ...BUILDINGS, f
   },
 });
 
-createSplash(document.getElementById("ui"), {
+const splash = createSplash(document.getElementById("ui"), {
   seed,
   onContinue: () => {
     const save = loadSave();
@@ -168,6 +168,8 @@ createSplash(document.getElementById("ui"), {
     }
   },
   onDismiss: (wasContinue) => {
+    loop.paused = false;
+    hud.setPaused(false);
     hud.toast(wasContinue ? "Game restored" : `Valley seed ${seed} — WASD moves the founder, SPACE works the nearest thing`);
   },
 });
@@ -179,9 +181,10 @@ const pauseMenu = createPauseMenu(document.getElementById("ui"), {
     pauseMenu.hide();
   },
   onMainMenu: () => {
+    pauseMenu.hide();
     loop.paused = true;
-    deleteSave();
-    location.href = location.pathname;
+    hud.setPaused(true);
+    splash.show();
   },
 });
 
