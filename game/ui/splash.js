@@ -51,11 +51,5 @@ export function createSplash(root, { seed, onContinue, onDismiss }) {
   }
 
   root.appendChild(wrap);
-
-  if (!existing) {
-    deleteSave();
-    dismiss();
-  }
-
   return { dismiss };
 }
