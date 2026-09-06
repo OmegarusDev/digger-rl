@@ -1,4 +1,5 @@
 const SAVE_KEY = "truelevellers_save";
+const SAVE_VERSION = 1;
 
 export function hasSave() {
   try {
@@ -11,6 +12,7 @@ export function hasSave() {
 export function saveGame(sim) {
   try {
     const data = {
+      version: SAVE_VERSION,
       seed: sim.state.seed,
       savedAt: Date.now(),
       state: JSON.parse(JSON.stringify(sim.state, (k, v) => {
@@ -29,7 +31,12 @@ export function loadSave() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    if (data.version !== SAVE_VERSION) {
+      localStorage.removeItem(SAVE_KEY);
+      return null;
+    }
+    return data;
   } catch {
     return null;
   }

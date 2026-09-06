@@ -58,18 +58,7 @@ export function professionLabel(v) {
   return prof ? PROFESSIONS[prof].label : "Unemployed";
 }
 
-export function updateVillager(state, v, dt) {
-  v.moving = false;
-  dawnNeeds(state, v);
-  if (v.state === "sleeping") return sleepTick(state, v, dt);
-  if (v.state === "toBed") return toBedTick(state, v, dt);
-  if (v.state === "arriving") return arriveTick(state, v, dt);
-  if (darkness(state.time.tod) >= 0.5) return duskSleep(state, v, dt);
-  if (v.workplace && workTick(state, v, dt)) return;
-  idleTick(state, v, dt);
-}
-
-function dawnNeeds(state, v) {
+export function feedVillager(state, v) {
   if (v.lastDay === state.time.day) return;
   v.lastDay = state.time.day;
   v.meals = Math.max(0, v.meals - 1);
@@ -88,6 +77,16 @@ function dawnNeeds(state, v) {
   } else {
     v.hungerT = 0;
   }
+}
+
+export function updateVillager(state, v, dt) {
+  v.moving = false;
+  if (v.state === "sleeping") return sleepTick(state, v, dt);
+  if (v.state === "toBed") return toBedTick(state, v, dt);
+  if (v.state === "arriving") return arriveTick(state, v, dt);
+  if (darkness(state.time.tod) >= 0.5) return duskSleep(state, v, dt);
+  if (v.workplace && workTick(state, v, dt)) return;
+  idleTick(state, v, dt);
 }
 
 function sleepTick(state, v, dt) {

@@ -89,9 +89,21 @@ function fishRun(state, v, t, dt) {
     const w = walkTask(state, v, t.x, t.y, 0.35, dt);
     return w === "walking";
   }
+  if (t.cooldown > 0) {
+    t.cooldown -= dt;
+    v.action = "fish";
+    v.dir = Math.atan2(t.y - v.y, t.x + (v.x < t.x ? 1 : -1) * 0.8 - v.x);
+    return true;
+  }
   swingTask(state, v, "fisher", "fish", t.x + (v.x < t.x ? 1 : -1) * 0.8, t.y, dt, () => {
-    v.carry.food = (v.carry.food ?? 0) + Math.min(2, Math.max(0, v.carryMax - carryUnits(v.carry)));
-    state.bus.emit("gather", { x: v.x, y: v.y, good: "food", n: 2 });
+    if (state.rng() < 0.5) {
+      const n = Math.min(1, Math.max(0, v.carryMax - carryUnits(v.carry)));
+      if (n > 0) {
+        v.carry.food = (v.carry.food ?? 0) + n;
+        state.bus.emit("gather", { x: v.x, y: v.y, good: "food", n });
+      }
+    }
+    t.cooldown = 2;
   });
   return true;
 }

@@ -1,7 +1,7 @@
 import { createState } from "./state.js";
 import { createFounder, updateFounder } from "./founder.js";
 import { advanceTime } from "./time.js";
-import { updateVillager } from "./villager.js";
+import { updateVillager, feedVillager } from "./villager.js";
 import { vacancyTick } from "./jobs.js";
 import { updateArrivals, spawnStartingVillagers } from "./camp.js";
 import { updateFauna } from "./fauna.js";
@@ -22,6 +22,7 @@ export function createSim(seed) {
     updateFauna(state, dt);
     updateFields(state, dt);
     updateArrivals(state);
+    for (let i = 0; i < state.villagers.length; i++) feedVillager(state, state.villagers[i]);
     for (let i = state.villagers.length - 1; i >= 0; i--) updateVillager(state, state.villagers[i], dt);
     vacancyT -= dt;
     if (vacancyT <= 0) {
