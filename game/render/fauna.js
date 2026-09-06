@@ -13,18 +13,25 @@ const trapDef = [
 ];
 
 export function deerShadowSpec(P, deer) {
-  return {
-    x: deer.x,
-    y: deer.y,
-    fp: 0.32,
-    h: 0.42,
-    key: "deer",
-    alpha: 0.9,
-    draw: (g, m) => {
-      const p = m.project(deer.x, deer.y);
-      drawVisual(g, m.V, deerDef, p.x, p.y, m.scale * p.s, P.flora);
-    },
-  };
+  let s = deer._ss;
+  if (!s) {
+    s = {
+      x: 0,
+      y: 0,
+      fp: 0.32,
+      h: 0.42,
+      alpha: 0.9,
+      key: "deer",
+      draw: (g, m) => {
+        const p = m.project(deer.x, deer.y);
+        drawVisual(g, m.V, deerDef, p.x, p.y, m.scale * p.s, P.flora);
+      },
+    };
+    deer._ss = s;
+  }
+  s.x = deer.x;
+  s.y = deer.y;
+  return s;
 }
 
 export function drawDeer(ctx, cam, P, deer, sun) {

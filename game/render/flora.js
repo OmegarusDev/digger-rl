@@ -92,22 +92,31 @@ export function floraVisual(item, alive) {
 
 export function floraShadowSpec(P, item) {
   if (item.state === "falling" || item.state === "gone") return null;
-  let kind = item.kind;
-  if (item.state === "stump") kind = "stump";
-  const shape = SHAPES[kind] || SHAPES.bush;
-  const def = floraVisual(item, item.state === "alive");
-  return {
-    x: item.x,
-    y: item.y,
-    fp: shape.fp * item.scale,
-    h: shape.h * item.scale,
-    key: `flora:${kind}:${item.species ?? ""}:${item.variant}:${item.state}:${Math.round(item.scale * 8)}`,
-    alpha: 1,
-    draw: (g, m) => {
-      const p = m.project(item.x, item.y);
-      drawVisual(g, m.V, def, p.x, p.y, item.scale * m.scale * p.s, P.flora);
-    },
-  };
+  const k = `${item.state}:${item.variant}:${Math.round(item.scale * 8)}`;
+  let s = item._ss;
+  if (!s || s._k !== k) {
+    let kind = item.kind;
+    if (item.state === "stump") kind = "stump";
+    const shape = SHAPES[kind] || SHAPES.bush;
+    const def = floraVisual(item, item.state === "alive");
+    s = {
+      _k: k,
+      x: item.x,
+      y: item.y,
+      fp: shape.fp * item.scale,
+      h: shape.h * item.scale,
+      key: `flora:${kind}:${item.species ?? ""}:${item.variant}:${item.state}:${Math.round(item.scale * 8)}`,
+      alpha: 1,
+      draw: (g, m) => {
+        const p = m.project(item.x, item.y);
+        drawVisual(g, m.V, def, p.x, p.y, item.scale * m.scale * p.s, P.flora);
+      },
+    };
+    item._ss = s;
+  }
+  s.x = item.x;
+  s.y = item.y;
+  return s;
 }
 
 export function drawFlora(ctx, cam, P, item, t, sun) {
