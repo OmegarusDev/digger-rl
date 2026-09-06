@@ -116,6 +116,11 @@ export class WorldCamera {
     };
   }
 
+  groundAffine(wx, wy) {
+    const p = this.project(wx, wy);
+    return { ax: p.x, ay: p.y, s: p.s, rate: this.scale * p.s };
+  }
+
   screenToWorld(sx, sy) {
     return this.unproject(sx, sy);
   }

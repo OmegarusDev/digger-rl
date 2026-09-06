@@ -1,8 +1,8 @@
 import { box25 } from "../../forge/prims.js";
 import { mats, withAlpha } from "../../forge/draw.js";
 import { drawAgent } from "../../forge/agents.js";
-import { drawSunShadow } from "../../forge/sun.js";
 import { carryUnits } from "../data/goods.js";
+import { agentShadowSpec } from "./villager.js";
 
 export function makeFounderSkin(P) {
   return {
@@ -47,7 +47,44 @@ export function drawFounder(ctx, cam, P, founder, sun) {
   ctx.lineWidth = 1;
 }
 
-export function drawCamp(ctx, cam, P, state, t, sun) {
+export function campShadowSpecs(P, state) {
+  const c = state.camp;
+  const pile = Math.min(4, Math.ceil(state.stores.log / 6));
+  return [
+    {
+      x: c.x + 1.65,
+      y: c.y + 0.1,
+      fp: 0.55,
+      h: 0.62,
+      key: `stash:${pile}`,
+      alpha: 1,
+      draw: (g, m) => drawStash(g, m, P, state),
+    },
+    {
+      x: c.x - 0.4,
+      y: c.y + 1.05,
+      fp: 0.36,
+      h: 0.4,
+      key: "fire",
+      alpha: 0.85,
+      draw: (g, m) => drawFire(g, m, P, state, 0, false),
+    },
+  ];
+}
+
+export function founderShadowSpec(P, f) {
+  return agentShadowSpec(f.x, f.y, {
+    moving: f.moving,
+    phase: f.phase,
+    dir: f.dir,
+    action: f.action,
+    swing: f.swing,
+    carry: carryUnits(f.carry),
+    flash: 0,
+  }, makeFounderSkin(P), 1);
+}
+
+export function drawStash(ctx, cam, P, state) {
   const c = state.camp;
   const px = c.x + 0.5;
   const py = c.y + 0.5;
@@ -58,7 +95,6 @@ export function drawCamp(ctx, cam, P, state, t, sun) {
   const w = 0.62 * scale * stash.s;
   const d = 0.5 * scale * stash.s;
   const h = 0.52 * scale * stash.s * cam.V.vExag;
-  drawSunShadow(ctx, cam, sun, px + 1.15, py - 0.4, 0.45, 0.6, 0.28);
   box25(cam.V, ctx, stash.x, stash.y - h, w, d, h, m);
   ctx.strokeStyle = "rgba(40,30,16,0.5)";
   ctx.lineWidth = 1;
@@ -85,10 +121,12 @@ export function drawCamp(ctx, cam, P, state, t, sun) {
     ctx.fillStyle = "rgba(255,240,200,0.14)";
     ctx.fillRect(lp.x - w * 0.3, ly - 0.06 * cam.scale * stash.s, w * 0.6, 0.02 * cam.scale * stash.s);
   }
+}
 
-  const fire = cam.project(px - 0.9, py + 0.55);
-  const fr = 0.3 * scale * fire.s;
-  drawSunShadow(ctx, cam, sun, px - 0.9, py + 0.55, 0.32, 0.12, 0.18);
+export function drawFire(ctx, cam, P, state, t, flames = true) {
+  const c = state.camp;
+  const fire = cam.project(c.x + 0.5 - 0.9, c.y + 0.5 + 0.55);
+  const fr = 0.3 * cam.scale * fire.s;
   ctx.fillStyle = "#5c544a";
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * Math.PI * 2;
@@ -106,6 +144,7 @@ export function drawCamp(ctx, cam, P, state, t, sun) {
   ctx.lineTo(fire.x - fr * 0.5, fire.y - fr * 0.2);
   ctx.stroke();
   ctx.lineCap = "butt";
+  if (!flames) return;
 
   const flick = 0.85 + Math.sin(t * 13) * 0.1 + Math.sin(t * 29 + 1.7) * 0.06;
   const fh = fr * 2.1 * flick;
@@ -121,6 +160,12 @@ export function drawCamp(ctx, cam, P, state, t, sun) {
   ctx.quadraticCurveTo(fire.x + fr * 0.26, fire.y - fh * 0.18, fire.x, fire.y + fr * 0.08);
   ctx.quadraticCurveTo(fire.x - fr * 0.26, fire.y - fh * 0.18, fire.x, fire.y - fh * 0.55);
   ctx.fill();
+}
+
+export function drawCamp(ctx, cam, P, state, t, sun) {
+  void sun;
+  drawStash(ctx, cam, P, state);
+  drawFire(ctx, cam, P, state, t);
 }
 
 export function drawFireGlow(ctx, cam, P, state, darkness) {

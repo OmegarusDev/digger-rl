@@ -1,5 +1,4 @@
 import { drawVisual } from "../../forge/visuals.js";
-import { drawSunShadow } from "../../forge/sun.js";
 
 const deerDef = [
   ["box", { w: 0.36, d: 0.18, h: 0.2, top: "#8a6240", side: "#6e4c30", dark: "#54381f" }],
@@ -13,10 +12,25 @@ const trapDef = [
   ["post", { x: 0.16, y: 0.0, h: 0.12 }],
 ];
 
+export function deerShadowSpec(P, deer) {
+  return {
+    x: deer.x,
+    y: deer.y,
+    fp: 0.32,
+    h: 0.42,
+    key: "deer",
+    alpha: 0.9,
+    draw: (g, m) => {
+      const p = m.project(deer.x, deer.y);
+      drawVisual(g, m.V, deerDef, p.x, p.y, m.scale * p.s, P.flora);
+    },
+  };
+}
+
 export function drawDeer(ctx, cam, P, deer, sun) {
   const p = cam.project(deer.x, deer.y);
-  drawSunShadow(ctx, cam, sun, deer.x, deer.y, 0.3, 0.3, 0.18);
-  drawVisual(ctx, cam.V, deerDef, 0, 0, cam.scale * p.s, P.flora);
+  void sun;
+  drawVisual(ctx, cam.V, deerDef, p.x, p.y, cam.scale * p.s, P.flora);
   if (deer.flash > 0) {
     ctx.fillStyle = `rgba(255,255,255,${(deer.flash * 1.5).toFixed(2)})`;
     ctx.beginPath();

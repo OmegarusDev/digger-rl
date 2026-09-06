@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { DAY_LEN } from "../../game/sim/time.js";
 import { createSim } from "../../game/sim/sim.js";
 import { placeBuilding, buildingAtCell } from "../../game/sim/state.js";
 import { isWalkable, pathTo } from "../../game/sim/grid.js";
@@ -45,7 +46,7 @@ function buildNear(sim, kindId, px, py, stores) {
   assert.ok(callVillager(state).ok, "the call is answered");
   state.rng = origRng;
   const day = state.time.day;
-  state.time.t = (day + 1) * 360 + 200;
+  state.time.t = (day + 1) * DAY_LEN + 200;
   run(sim, 90);
   assert.equal(state.villagers.length, 3, "the called villager arrived");
   const newcomer = state.villagers.find((v) => v.state === "idle" && !v.workplace);
@@ -88,7 +89,7 @@ function buildNear(sim, kindId, px, py, stores) {
   run(sim, 480);
   assert.ok(state.stores.food > 0, `bread reached the commons (food ${state.stores.food})`);
 
-  const dawnT = (Math.floor(state.time.t / 360) + 1) * 360 + 120;
+  const dawnT = (Math.floor(state.time.t / DAY_LEN) + 1) * DAY_LEN + 120;
   state.time.t = dawnT;
   run(sim, 6);
   const fed = state.villagers.filter((v) => v.meals > 0).length;
@@ -100,7 +101,7 @@ function buildNear(sim, kindId, px, py, stores) {
 
   const house = buildNear(sim, "house", state.camp.x, state.camp.y, {});
   assert.ok(buildBed(state, house).ok, "bed built");
-  state.time.t = (Math.floor(state.time.t / 360) + 1) * 360 + 330;
+  state.time.t = (Math.floor(state.time.t / DAY_LEN) + 1) * DAY_LEN + Math.round(DAY_LEN * 0.87);
   run(sim, 10);
   assert.ok(state.villagers.some((v) => v.home === house.id), "a villager claimed the bed at dusk");
 }

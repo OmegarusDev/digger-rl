@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { DAY_LEN } from "../../game/sim/time.js";
 import { createSim } from "../../game/sim/sim.js";
 import { placeBuilding } from "../../game/sim/state.js";
 import { isWalkable } from "../../game/sim/grid.js";
@@ -107,7 +108,7 @@ function buildBuiltNear(sim, kindId, stores, px, py) {
   const field = placeField(state, openRectNear(state, Math.floor(state.camp.x) + 4, Math.floor(state.camp.y), 2, 2)).field;
   field.seed = "wheat";
   field.stage = 1;
-  state.time.t = 13 * 360 + 2;
+  state.time.t = 13 * DAY_LEN + 2;
   run(sim, 2);
   assert.equal(state.time.season, 3, "season reached winter");
   assert.equal(field.stage, -1, "winter kills wheat");

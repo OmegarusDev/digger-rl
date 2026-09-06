@@ -132,7 +132,7 @@ const panel = createInfoPanel(document.getElementById("ui"), (act, arg) => {
     if (b && v) hud.toast(`${v.name} released from work`);
     if (b) unassign(sim.state, b, vId);
   }
-});
+}, { P });
 
 let placing = null;
 let fieldDrag = null;
@@ -345,7 +345,7 @@ function frameInner(dt) {
   renderScene(ctx, cam, P, sim, fx, t, (c, m) => terrain.render(c, m), { hoverItem, hoverBuilding, ghost, ghostField, selected });
   canvas.classList.toggle("placing", !!placing);
   buildbar.refresh(sim.state.stores);
-  panel.update(sim.state, selected, f);
+  panel.update(sim.state, placing ? { type: "placing", kind: placing } : selected, f);
   hud.update(sim.state, f, follow);
 }
 

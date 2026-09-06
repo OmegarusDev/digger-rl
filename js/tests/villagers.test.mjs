@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { DAY_LEN } from "../../game/sim/time.js";
 import { createSim } from "../../game/sim/sim.js";
 import { canPlace, placeBuilding } from "../../game/sim/state.js";
 import { createVillager, hungerState } from "../../game/sim/villager.js";
@@ -103,10 +104,10 @@ function buildAt(sim, kindId, stores) {
   const state = sim.state;
   run(sim, 1);
   const v = state.villagers[0];
-  state.time.t = 360 - 2;
+  state.time.t = DAY_LEN - 2;
   run(sim, 4);
   assert.equal(v.state, "sleeping", "villager sleeps through the night");
-  state.time.t = 360 + 90;
+  state.time.t = DAY_LEN + Math.round(DAY_LEN * 0.26);
   run(sim, 3);
   assert.equal(v.state, "idle", "villager wakes at dawn");
   assert.ok(v.sleptRough, "sleeping without a bed marks slept rough");
@@ -122,12 +123,12 @@ function buildAt(sim, kindId, stores) {
   assert.ok(buildBed(state, house).ok, "bed 1 built");
   assert.ok(buildBed(state, house).ok, "bed 2 built");
   assert.equal(house.beds, 2, "beds registered");
-  state.time.t = 360 - 2;
+  state.time.t = DAY_LEN - 2;
   run(sim, 6);
   const inBed = state.villagers.filter((v) => v.home === house.id);
   assert.equal(inBed.length, 2, "both villagers claimed a bed");
   assert.ok(inBed.every((v) => v.state === "sleeping" || v.state === "toBed"), "sleeping after walking home");
-  state.time.t = 360 + 90;
+  state.time.t = DAY_LEN + Math.round(DAY_LEN * 0.26);
   run(sim, 3);
   assert.ok(inBed.every((v) => v.sleptRough === false), "a real bed clears the rough-sleep mark");
 }
@@ -140,10 +141,10 @@ function buildAt(sim, kindId, stores) {
   v.meals = 0;
   v.hungerT = 0;
   state.stores.food = 0;
-  state.time.t = 360 - 2;
+  state.time.t = DAY_LEN - 2;
   run(sim, 4);
   assert.equal(hungerState(v), "hungry", "missed one meal -> hungry");
-  state.time.t = 2 * 360 - 2;
+  state.time.t = 2 * DAY_LEN - 2;
   run(sim, 4);
   assert.equal(hungerState(v), "starving", "missed two meals -> starving");
   const hpBefore = v.hp;
@@ -159,7 +160,7 @@ function buildAt(sim, kindId, stores) {
   v.hungerT = 2;
   v.hp = 10;
   state.stores.food = 0;
-  state.time.t = 360 - 2;
+  state.time.t = DAY_LEN - 2;
   run(sim, 4);
   assert.equal(state.villagers.includes(v), false, "starving villager dies");
   assert.ok(state.villagers.length >= 1, "the other villager survives");
@@ -182,7 +183,7 @@ function buildAt(sim, kindId, stores) {
   assert.ok(!blocked.ok, "one call per day");
   state.rng = origRng;
   const before = state.villagers.length;
-  state.time.t = (day + 1) * 360 + 200;
+  state.time.t = (day + 1) * DAY_LEN + 200;
   run(sim, 90);
   assert.equal(state.villagers.length, before + 1, "called villager arrived and joined");
 }

@@ -1,4 +1,4 @@
-export const DAY_LEN = 360;
+export const DAY_LEN = 600;
 export const SEASON_DAYS = 4;
 export const SEASONS = ["Spring", "Summer", "Autumn", "Winter"];
 

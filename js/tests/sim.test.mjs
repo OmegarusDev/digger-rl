@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createSim } from "../../game/sim/sim.js";
 import { astar, isWalkable, pathTo } from "../../game/sim/grid.js";
-import { SEASONS } from "../../game/sim/time.js";
+import { SEASONS, DAY_LEN } from "../../game/sim/time.js";
 import { carryTotal } from "../../game/sim/founder.js";
 
 function run(sim, seconds) {
@@ -48,7 +48,7 @@ function walkTo(sim, f, x, y, within) {
 
 {
   const sim = createSim(777);
-  run(sim, 360 * 9);
+  run(sim, DAY_LEN * 9);
   const t = sim.state.time;
   assert.ok(t.day >= 9, `days advanced (${t.day})`);
   const season = SEASONS[t.season];

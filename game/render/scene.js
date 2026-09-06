@@ -1,86 +1,101 @@
-import { drawFlora } from "./flora.js";
-import { drawBuilding, drawGhost } from "./buildings.js";
-import { drawFounder, drawCamp, drawFireGlow } from "./camp.js";
-import { drawVillager } from "./villager.js";
-import { drawDeer, drawTrap } from "./fauna.js";
+import { drawFlora, floraShadowSpec } from "./flora.js";
+import { drawBuilding, drawGhost, buildingShadowSpec } from "./buildings.js";
+import { drawFounder, drawCamp, drawFireGlow, campShadowSpecs, founderShadowSpec } from "./camp.js";
+import { drawVillager, villagerShadowSpec } from "./villager.js";
+import { drawDeer, drawTrap, deerShadowSpec } from "./fauna.js";
 import { drawField, drawFieldGhost } from "./fields.js";
-import { WORK_RANGE } from "../sim/founder.js";
+import { castSilhouette } from "../../forge/shadows.js";
+import { sunState, shadowParams } from "../../forge/sun.js";
 import { withAlpha } from "../../forge/draw.js";
-import { sunState } from "../../forge/sun.js";
+import { WORK_RANGE } from "../sim/founder.js";
 
 const vig = { cache: "", fill: null };
 
 export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {}) {
   const state = sim.state;
   const sun = sunState(state.time);
+  const sp = shadowParams(sun);
   cam.begin(ctx);
   try {
     terrainRenderer(ctx, cam);
+
+    const b = cam.getVisibleBounds();
+    const drawList = [];
+    for (const item of state.flora) {
+      if (item.state === "gone") continue;
+      if (item.x < b.left - 3 || item.x > b.right + 3 || item.y < b.top - 4 || item.y > b.bottom + 4) continue;
+      drawList.push({ y: item.y, item });
+    }
+    for (const deer of state.fauna.deer) {
+      if (deer.x < b.left - 3 || deer.x > b.right + 3 || deer.y < b.top - 4 || deer.y > b.bottom + 4) continue;
+      drawList.push({ y: deer.y, deer });
+    }
+    for (const trap of state.fauna.traps) {
+      if (trap.x < b.left - 3 || trap.x > b.right + 3 || trap.y < b.top - 4 || trap.y > b.bottom + 4) continue;
+      drawTrap(ctx, cam, P, trap, trap.caught);
+    }
+    for (const field of state.fields) {
+      if (field.cx < b.left - 24 || field.cx > b.right + 24 || field.cy < b.top - 24 || field.cy > b.bottom + 24) continue;
+      drawField(ctx, cam, P, field, t);
+    }
+    for (const bd of state.buildings) {
+      if (bd.x < b.left - 3 || bd.x > b.right + 3 || bd.y < b.top - 4 || bd.y > b.bottom + 4) continue;
+      drawList.push({ y: bd.y, bd });
+    }
+    for (const v of state.villagers) {
+      if (v.x < b.left - 3 || v.x > b.right + 3 || v.y < b.top - 4 || v.y > b.bottom + 4) continue;
+      drawList.push({ y: v.y, villager: v });
+    }
+    drawList.push({ y: state.founder.y, founder: true });
+
+    if (sp.on) {
+      for (const cs of campShadowSpecs(P, state)) castSilhouette(ctx, cam, sp, cs);
+      for (const e of drawList) {
+        if (e.founder) castSilhouette(ctx, cam, sp, founderShadowSpec(P, state.founder));
+        else if (e.villager) castSilhouette(ctx, cam, sp, villagerShadowSpec(P, e.villager));
+        else if (e.deer) castSilhouette(ctx, cam, sp, deerShadowSpec(P, e.deer));
+        else if (e.bd) castSilhouette(ctx, cam, sp, buildingShadowSpec(P, e.bd, t));
+        else if (e.item) castSilhouette(ctx, cam, sp, floraShadowSpec(P, e.item));
+      }
+    }
+
     drawCamp(ctx, cam, P, state, t, sun);
 
-  const b = cam.getVisibleBounds();
-  const drawList = [];
-  for (const item of state.flora) {
-    if (item.state === "gone") continue;
-    if (item.x < b.left - 3 || item.x > b.right + 3 || item.y < b.top - 4 || item.y > b.bottom + 4) continue;
-    drawList.push({ y: item.y, item });
-  }
-  for (const deer of state.fauna.deer) {
-    if (deer.x < b.left - 3 || deer.x > b.right + 3 || deer.y < b.top - 4 || deer.y > b.bottom + 4) continue;
-    drawList.push({ y: deer.y, deer });
-  }
-  for (const trap of state.fauna.traps) {
-    if (trap.x < b.left - 3 || trap.x > b.right + 3 || trap.y < b.top - 4 || trap.y > b.bottom + 4) continue;
-    drawTrap(ctx, cam, P, trap, trap.caught);
-  }
-  for (const field of state.fields) {
-    if (field.cx < b.left - 24 || field.cx > b.right + 24 || field.cy < b.top - 24 || field.cy > b.bottom + 24) continue;
-    drawField(ctx, cam, P, field, t);
-  }
-  for (const bd of state.buildings) {
-    if (bd.x < b.left - 3 || bd.x > b.right + 3 || bd.y < b.top - 4 || bd.y > b.bottom + 4) continue;
-    drawList.push({ y: bd.y, bd });
-  }
-  for (const v of state.villagers) {
-    if (v.x < b.left - 3 || v.x > b.right + 3 || v.y < b.top - 4 || v.y > b.bottom + 4) continue;
-    drawList.push({ y: v.y, villager: v });
-  }
-  drawList.push({ y: state.founder.y, founder: true });
-  drawList.sort((a, c) => a.y - c.y);
-  for (const e of drawList) {
-    if (e.founder) drawFounder(ctx, cam, P, state.founder, sun);
-    else if (e.villager) drawVillager(ctx, cam, P, e.villager, sun);
-    else if (e.deer) drawDeer(ctx, cam, P, e.deer, sun);
-    else if (e.bd) drawBuilding(ctx, cam, P, e.bd, opts.hoverBuilding?.id === e.bd.id, sun, t);
-    else drawFlora(ctx, cam, P, e.item, t, sun);
-  }
+    drawList.sort((a, c) => a.y - c.y);
+    for (const e of drawList) {
+      if (e.founder) drawFounder(ctx, cam, P, state.founder, sun);
+      else if (e.villager) drawVillager(ctx, cam, P, e.villager, sun);
+      else if (e.deer) drawDeer(ctx, cam, P, e.deer, sun);
+      else if (e.bd) drawBuilding(ctx, cam, P, e.bd, opts.hoverBuilding?.id === e.bd.id, sun, t);
+      else drawFlora(ctx, cam, P, e.item, t, sun);
+    }
 
-  drawSelection(ctx, cam, P, state, opts.selected, t);
-  drawWorkTarget(ctx, cam, P, state, t);
+    drawSelection(ctx, cam, P, state, opts.selected, t);
+    drawWorkTarget(ctx, cam, P, state, t);
 
-  const hov = opts.hoverItem;
-  if (hov && hov.state === "alive") {
-    const inRange = Math.hypot(hov.x - state.founder.x, hov.y - state.founder.y) <= WORK_RANGE;
-    const hp = cam.project(hov.x, hov.y);
-    ctx.strokeStyle = withAlpha(P.ui.accent, inRange ? 0.8 : 0.32);
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.ellipse(hp.x, hp.y, 0.44 * cam.scale * hp.s, 0.44 * cam.scale * hp.s * cam.V.deckRatio, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.lineWidth = 1;
-  }
+    const hov = opts.hoverItem;
+    if (hov && hov.state === "alive") {
+      const inRange = Math.hypot(hov.x - state.founder.x, hov.y - state.founder.y) <= WORK_RANGE;
+      const hp = cam.project(hov.x, hov.y);
+      ctx.strokeStyle = withAlpha(P.ui.accent, inRange ? 0.8 : 0.32);
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.ellipse(hp.x, hp.y, 0.44 * cam.scale * hp.s, 0.44 * cam.scale * hp.s * cam.V.deckRatio, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+    }
 
-  if (opts.ghost) {
-    drawGhost(ctx, cam, P, opts.ghost.kind, opts.ghost.x, opts.ghost.y, opts.ghost.valid);
-  }
+    if (opts.ghost) {
+      drawGhost(ctx, cam, P, opts.ghost.kind, opts.ghost.x, opts.ghost.y, opts.ghost.valid);
+    }
 
-  if (opts.ghostField) {
-    drawFieldGhost(ctx, cam, opts.ghostField.tiles, opts.ghostField.valid);
-  }
+    if (opts.ghostField) {
+      drawFieldGhost(ctx, cam, opts.ghostField.tiles, opts.ghostField.valid);
+    }
 
-  fx.draw(ctx, (x, y) => cam.project(x, y), cam.scale);
+    fx.draw(ctx, (x, y) => cam.project(x, y), cam.scale);
   } finally {
     cam.end(ctx);
   }
@@ -93,7 +108,17 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
     ctx.fillRect(0, 0, cam.screenW, cam.screenH);
   }
   if (sun.warmth > 0.01) {
-    ctx.fillStyle = `rgba(236,146,66,${(sun.warmth * 0.13).toFixed(3)})`;
+    const wx = Math.cos(sun.az);
+    const wy = Math.sin(sun.az) * 0.7;
+    const cx = cam.screenW / 2;
+    const cy = cam.screenH / 2;
+    const R = Math.max(cam.screenW, cam.screenH) * 0.62;
+    const g = ctx.createLinearGradient(cx + wx * R, cy + wy * R, cx - wx * R, cy - wy * R);
+    const w = sun.warmth;
+    g.addColorStop(0, `rgba(236,146,66,${(w * 0.17).toFixed(3)})`);
+    g.addColorStop(0.55, `rgba(236,146,66,${(w * 0.05).toFixed(3)})`);
+    g.addColorStop(1, "rgba(236,146,66,0)");
+    ctx.fillStyle = g;
     ctx.fillRect(0, 0, cam.screenW, cam.screenH);
   }
   const vigKey = `${cam.screenW}x${cam.screenH}`;

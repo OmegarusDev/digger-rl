@@ -18,6 +18,35 @@ export function makeVillagerSkin(P, v) {
   };
 }
 
+export function agentShadowSpec(x, y, anim, skin, unitWorld) {
+  const key = `agent:${anim.moving ? 1 : 0}:${Math.floor(anim.phase * 12)}:${anim.action}:${Math.round((anim.swing || 0) * 6)}:${anim.carry > 0 ? 1 : 0}`;
+  return {
+    x,
+    y,
+    fp: 0.24,
+    h: 0.68 * unitWorld,
+    hMul: 1,
+    key,
+    alpha: 0.92,
+    draw: (g, m) => {
+      const p = m.project(x, y);
+      drawAgent(g, p, anim, skin, m.V, m.scale * unitWorld, null);
+    },
+  };
+}
+
+export function villagerShadowSpec(P, v) {
+  return agentShadowSpec(v.x, v.y, {
+    moving: v.moving,
+    phase: v.phase,
+    dir: v.dir,
+    action: v.action,
+    swing: v.swing,
+    carry: carryUnits(v.carry),
+    flash: 0,
+  }, makeVillagerSkin(P, v), KINDS[v.kind].scale);
+}
+
 export function drawVillager(ctx, cam, P, v, sun) {
   const p = cam.project(v.x, v.y);
   const kind = KINDS[v.kind];

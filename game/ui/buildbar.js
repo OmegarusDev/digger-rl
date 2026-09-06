@@ -1,6 +1,31 @@
 import { GOODS } from "../data/goods.js";
 
 export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
+  const tip = document.createElement("div");
+  tip.className = "build-tip";
+  root.appendChild(tip);
+  const canHover = typeof matchMedia === "function" && matchMedia("(hover: hover)").matches;
+  let tipTimer = 0;
+
+  function fillTip(def) {
+    const cost = def.costNote ?? Object.entries(def.cost)
+      .map(([gg, c]) => `${c} ${GOODS[gg].name}`)
+      .join(" · ");
+    tip.innerHTML = `<b>${def.name}</b><i>${cost}</i><p>${def.desc ?? ""}</p>`;
+  }
+
+  function showTip(card) {
+    const r = card.getBoundingClientRect();
+    tip.style.right = `${Math.max(10, window.innerWidth - r.left + 10)}px`;
+    tip.style.bottom = `${Math.max(10, window.innerHeight - r.bottom)}px`;
+    tip.classList.add("on");
+  }
+
+  function hideTip() {
+    clearTimeout(tipTimer);
+    tip.classList.remove("on");
+  }
+
   const fab = document.createElement("button");
   fab.className = "build-fab clickable";
   fab.title = "Buildings (B)";
@@ -45,6 +70,7 @@ export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
     card.appendChild(txt);
     card.addEventListener("click", (e) => {
       e.stopPropagation();
+      hideTip();
       const active = card.classList.contains("active");
       setActive(null);
       closeMenu();
@@ -53,6 +79,13 @@ export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
         onPick?.(kindId);
       } else onCancel?.();
     });
+    card.addEventListener("mouseenter", () => {
+      if (!canHover) return;
+      fillTip(def);
+      clearTimeout(tipTimer);
+      tipTimer = setTimeout(() => showTip(card), 350);
+    });
+    card.addEventListener("mouseleave", hideTip);
     cards[kindId] = card;
     menu.appendChild(card);
   }
@@ -67,6 +100,7 @@ export function createBuildBar(root, BUILDINGS, { onPick, onCancel }) {
   function closeMenu() {
     open = false;
     menu.classList.remove("open");
+    hideTip();
   }
 
   fab.addEventListener("click", (e) => {

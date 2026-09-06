@@ -1,7 +1,26 @@
 import { drawVisual } from "../../forge/visuals.js";
-import { drawSunShadow } from "../../forge/sun.js";
 import { withAlpha, drawLabel } from "../../forge/draw.js";
 import { BUILDINGS, SITE_POSTS } from "../data/buildings.js";
+
+export function buildingShadowSpec(P, b, t) {
+  const def = BUILDINGS[b.kind];
+  const site = b.state === "site";
+  const kind = b.kind;
+  return {
+    x: b.x,
+    y: b.y,
+    fp: site ? 0.42 : 0.6,
+    h: site ? 0.45 : 0.92,
+    key: site ? "site" : `bld:${kind}:${b.storageLvl ?? 0}:${def.sails ? Math.floor(t * 6) : ""}`,
+    alpha: site ? 0.8 : 1,
+    draw: (g, m) => {
+      const p = m.project(b.x, b.y);
+      const s = m.scale * p.s;
+      drawVisual(g, m.V, site ? SITE_POSTS : def.visual, p.x, p.y, s, P.building);
+      if (!site && def.sails) drawSails(g, m.V, p, s, t);
+    },
+  };
+}
 
 export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
   const p = cam.project(b.x, b.y);
@@ -10,7 +29,6 @@ export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
   const def = BUILDINGS[b.kind];
 
   if (b.state === "site") {
-    drawSunShadow(ctx, cam, sun, b.x, b.y, 0.4, 0.45, 0.2);
     drawVisual(ctx, cam.V, SITE_POSTS, p.x, p.y, s, P.building);
     const w = 0.7 * s;
     const frac = b.work / b.maxWork;
@@ -25,9 +43,8 @@ export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
     return;
   }
 
-  drawSunShadow(ctx, cam, sun, b.x, b.y, 0.58, 0.85, 0.28);
   drawVisual(ctx, cam.V, def.visual, p.x, p.y, s, P.building);
-  if (def.sails) drawSails(ctx, cam, P, p, s, t);
+  if (def.sails) drawSails(ctx, cam.V, p, s, t);
   if (hover) {
     ctx.strokeStyle = withAlpha(P.ui.accent, 0.7);
     ctx.lineWidth = 1.5;
@@ -38,9 +55,9 @@ export function drawBuilding(ctx, cam, P, b, hover, sun, t = 0) {
   }
 }
 
-function drawSails(ctx, cam, P, p, s, t) {
+function drawSails(ctx, V, p, s, t) {
   const hubX = p.x;
-  const hubY = p.y - 0.98 * s * cam.V.vExag;
+  const hubY = p.y - 0.98 * s * V.vExag;
   const r = 0.34 * s;
   const angle = t * 0.6;
   ctx.strokeStyle = "#8a6a44";
