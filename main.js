@@ -179,6 +179,11 @@ const pauseMenu = createPauseMenu(document.getElementById("ui"), {
     hud.setPaused(false);
     pauseMenu.hide();
   },
+  onMainMenu: () => {
+    loop.paused = true;
+    saveGame(sim);
+    location.reload();
+  },
 });
 
 window.__game = {

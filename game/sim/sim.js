@@ -35,7 +35,7 @@ export function createSim(seed) {
 
   function loadState(saved) {
     for (const k of Object.keys(saved)) {
-      if (k === "bus" || k === "rng" || k === "floraMap" || k === "walk" || k === "buildingMap") continue;
+      if (k === "bus" || k === "rng" || k === "floraMap" || k === "walk" || k === "buildingMap" || k === "valley") continue;
       state[k] = saved[k];
     }
     state.floraMap = new Map();

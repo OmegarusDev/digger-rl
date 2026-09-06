@@ -1,6 +1,6 @@
 import { settings } from "../settings.js";
 
-export function createPauseMenu(root, { onResume }) {
+export function createPauseMenu(root, { onResume, onMainMenu }) {
   const wrap = document.createElement("div");
   wrap.className = "pause-wrap";
 
@@ -31,7 +31,7 @@ export function createPauseMenu(root, { onResume }) {
     menuView.style.display = "none";
     settingsView.style.display = "";
   }));
-  menuView.appendChild(btn("Restart", () => { location.reload(); }));
+  menuView.appendChild(btn("Main Menu", () => { onMainMenu?.(); }));
 
   const shadowRow = document.createElement("label");
   shadowRow.className = "pause-setting";
