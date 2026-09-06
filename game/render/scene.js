@@ -4,7 +4,7 @@ import { drawFounder, drawCamp, drawFireGlow, campShadowSpecs, founderShadowSpec
 import { drawVillager, villagerShadowSpec } from "./villager.js";
 import { drawDeer, drawTrap, deerShadowSpec } from "./fauna.js";
 import { drawField, drawFieldGhost } from "./fields.js";
-import { castSilhouette } from "../../forge/shadows.js";
+import { castSilhouette, beginShadowFrame, endShadowFrame } from "../../forge/shadows.js";
 import { sunState, shadowParams } from "../../forge/sun.js";
 import { withAlpha } from "../../forge/draw.js";
 import { WORK_RANGE } from "../sim/founder.js";
@@ -49,6 +49,7 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
     drawList.push({ y: state.founder.y, founder: true });
 
     if (sp.on) {
+      beginShadowFrame();
       for (const cs of campShadowSpecs(P, state)) castSilhouette(ctx, cam, sp, cs);
       for (const e of drawList) {
         if (e.founder) castSilhouette(ctx, cam, sp, founderShadowSpec(P, state.founder));
@@ -57,6 +58,7 @@ export function renderScene(ctx, cam, P, sim, fx, t, terrainRenderer, opts = {})
         else if (e.bd) castSilhouette(ctx, cam, sp, buildingShadowSpec(P, e.bd, t));
         else if (e.item) castSilhouette(ctx, cam, sp, floraShadowSpec(P, e.item));
       }
+      endShadowFrame(ctx);
     }
 
     drawCamp(ctx, cam, P, state, t, sun);
